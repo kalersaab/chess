@@ -23,20 +23,6 @@ State	TypeScript / React
 Native Logic	C++
 Bridge	TurboModule (JSI)
 Build	CMake, Gradle (Android), Xcode (iOS)
-📁 Project Structure
-react-native-chess/
-│
-├── src/                 # React Native UI & logic
-├── cpp/                 # C++ chess engine
-│   ├── ChessEngine.h
-│   └── ChessEngine.cpp
-│
-├── android/
-│   └── cpp modules via CMake
-│
-└── ios/
-    └── native module integration
-
 📦 How It Works
 
 The JS side sends a move using TurboModule:
@@ -52,14 +38,10 @@ UI updates instantly using React state.
 
 🛠️ Setup & Installation
 # Install dependencies
-npm install
+ npm install
 
 # Enable New Architecture (Android)
 cd android && ./gradlew clean
-
-# Build native module
-cd cpp
-# Configure using CMake (already handled via build scripts)
 
 # Run application
 npx react-native run-android

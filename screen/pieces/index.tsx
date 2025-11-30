@@ -6,6 +6,7 @@ import {
   View,
   TouchableOpacity,
   Text,
+  Alert,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -47,7 +48,7 @@ const Piece = ({ id, position, onMoveEnd, currentTurn }: PieceProps) => {
   const handlePromotion = async (promotionPiece: string) => {
     const moveWithPromotion = promotion!.move + promotionPiece;
     const isValid = await NativeChessModule.makeMove(moveWithPromotion);
-    if (isValid) {
+    if (isValid ==='valid' || isValid ==='checkmate') {
       translateX.value = withTiming(promotion!.newX * SIZE);
       translateY.value = withTiming(promotion!.newY * SIZE);
       onMoveEnd({ x: promotion!.newX, y: promotion!.newY });
@@ -59,27 +60,33 @@ const Piece = ({ id, position, onMoveEnd, currentTurn }: PieceProps) => {
   };
 
   const handleMoveEnd = async (move: string, newX: number, newY: number) => {
-    const isBlackPawnPromotion = id === 'p' && newY === 7;
-    const isWhitePawnPromotion = id === 'P' && newY === 0;
-    if (isBlackPawnPromotion || isWhitePawnPromotion) {
-      runOnJS(setPromotion)({
-        visible: true,
-        move,
-        newX,
-        newY,
-      });
-    } else {
-      const isValid = await NativeChessModule.makeMove(move);
-      if (isValid) {
-        translateX.value = withTiming(newX * SIZE);
-        translateY.value = withTiming(newY * SIZE);
-        onMoveEnd({ x: newX, y: newY });
-      } else {
-        translateX.value = withTiming(position.x * SIZE);
-        translateY.value = withTiming(position.y * SIZE);
-      }
+  const isBlackPawnPromotion = id === 'p' && newY === 7;
+  const isWhitePawnPromotion = id === 'P' && newY === 0;
+  if (isBlackPawnPromotion || isWhitePawnPromotion) {
+    runOnJS(setPromotion)({
+      visible: true,
+      move,
+      newX,
+      newY,
+    });
+    return;
+  }
+
+  const result = await NativeChessModule.makeMove(move);
+  if (result === 'valid' || result === 'checkmate' || result === 'check') {
+    translateX.value = withTiming(newX * SIZE);
+    translateY.value = withTiming(newY * SIZE);
+
+    onMoveEnd({ x: newX, y: newY });
+
+    if (result === 'checkmate') {
+      scheduleOnRN(Alert.alert, 'Checkmate', `${currentTurn} wins!`)
     }
-  };
+  } else {
+    translateX.value = withTiming(position.x * SIZE);
+    translateY.value = withTiming(position.y * SIZE);
+  }
+};
   const isWhitePiece = id === id.toUpperCase();
   const isPlayerTurn =
     (currentTurn === 'white' && isWhitePiece) ||

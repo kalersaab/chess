@@ -19,53 +19,87 @@ std::vector<std::vector<std::string>> ChessEngine::getBoard() const
 {
     return board;
 }
-bool ChessEngine::makeMove(const std::string &move)
-{
-    if (move.length() != 4 && move.length() != 5)
-        return false;
-    bool isPromotion = (move.length() == 5);
+std::string ChessEngine::makeMove(const std::string &move) {
+    if (move.length() != 4 && move.length() != 5) return "invalid";
+
+    bool isPromotion = move.length() == 5;
     char promotionPiece = isPromotion ? move[4] : '\0';
     int fromX = 8 - (move[1] - '0');
     int fromY = move[0] - 'a';
     int toX = 8 - (move[3] - '0');
     int toY = move[2] - 'a';
-    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8 ||
-        toX < 0 || toX >= 8 || toY < 0 || toY >= 8)
-    {
-        return false;
-    }
+
     std::string piece = board[fromX][fromY];
-    if (piece.empty())
-        return false;
+    if (piece.empty()) return "invalid";
 
     bool isWhitePiece = isupper(piece[0]);
-    if (whiteTurn != isWhitePiece)
-        return false;
-    if (!isValidPieceMove(piece, fromX, fromY, toX, toY))
-        return false;
-    if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece)
-    {
-        return false;
-    }
+    if (whiteTurn != isWhitePiece) return "invalid";
+
+    if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) return "invalid";
+    if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) return "invalid";
+
+    auto oldBoard = board;
+    bool oldTurn = whiteTurn;
 
     board[toX][toY] = piece;
     board[fromX][fromY] = "";
-    if (isPromotion && tolower(piece[0]) == 'p' && (toX == 0 || toX == 7))
-    {
-        char promoChar = isWhitePiece ? toupper(promotionPiece) : tolower(promotionPiece);
+
+    if (isPromotion && tolower(piece[0]) == 'p' && (toX == 0 || toX == 7)) {
+        char promoChar = isWhitePiece ? toupper(promotionPiece)
+                                      : tolower(promotionPiece);
         board[toX][toY] = std::string(1, promoChar);
     }
-    else
-    {
-        board[toX][toY] = piece;
+
+    if (isInCheck(isWhitePiece)) {
+        board = oldBoard;
+        whiteTurn = oldTurn;
+        return "false";
     }
 
     whiteTurn = !whiteTurn;
-    return true;
+    
+    if (isInCheck(!isWhitePiece)) {
+        if (isCheckmate(!isWhitePiece))
+            return "checkmate";
+        return "check";
+    }
+
+    return "valid";
 }
-bool ChessEngine::isValidPieceMove(const std::string &piece, int fromX, int fromY, int toX, int toY)
+
+bool ChessEngine::isInCheck(bool white) const {
+    int kingX = -1, kingY = -1;
+    char kingChar = white ? 'K' : 'k';
+
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            if (board[x][y] == std::string(1, kingChar)) {
+                kingX = x; kingY = y;
+                break;
+            }
+        }
+    }
+
+    if (kingX == -1) return false;
+    return isSquareAttacked(kingX, kingY, !white);
+}
+
+bool ChessEngine::isSquareAttacked(int x, int y, bool byWhite) const {
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            if (!board[i][j].empty() && (isupper(board[i][j][0]) == byWhite)) {
+                if (isValidPieceMove(board[i][j], i, j, x, y)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool ChessEngine::isValidPieceMove(const std::string &piece, int fromX, int fromY, int toX, int toY) const
 {
-    bool isWhitePiece = isupper(piece[0]); // FIXED
+    bool isWhitePiece = isupper(piece[0]);
     char p = tolower(piece[0]);
     int dx = toX - fromX;
     int dy = toY - fromY;
@@ -123,7 +157,7 @@ bool ChessEngine::isValidPieceMove(const std::string &piece, int fromX, int from
     }
 }
 
-bool ChessEngine::isPathClear(int fromX, int fromY, int toX, int toY)
+bool ChessEngine::isPathClear(int fromX, int fromY, int toX, int toY) const
 {
     int stepX = (toX - fromX) == 0 ? 0 : (toX - fromX) / abs(toX - fromX);
     int stepY = (toY - fromY) == 0 ? 0 : (toY - fromY) / abs(toY - fromY);
@@ -140,6 +174,46 @@ bool ChessEngine::isPathClear(int fromX, int fromY, int toX, int toY)
     }
     return true;
 }
+
+bool ChessEngine::isCheckmate(bool isWhiteTurnPlayer) {
+    if (!isInCheck(isWhiteTurnPlayer))
+        return false;
+
+    for (int fromX = 0; fromX < 8; fromX++) {
+        for (int fromY = 0; fromY < 8; fromY++) {
+            std::string piece = board[fromX][fromY];
+            if (piece.empty()) continue;
+
+            bool isWhitePiece = isupper(piece[0]);
+            if (isWhitePiece != isWhiteTurnPlayer) continue;
+
+            for (int toX = 0; toX < 8; toX++) {
+                for (int toY = 0; toY < 8; toY++) {
+
+                    if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) continue;
+                    if (!board[toX][toY].empty() &&
+                        isupper(board[toX][toY][0]) == isWhitePiece)
+                        continue;
+                    auto originalBoard = board;
+                    bool originalWhiteTurn = whiteTurn;
+
+                    board[toX][toY] = piece;
+                    board[fromX][fromY] = "";
+
+                    bool stillInCheck = isInCheck(isWhiteTurnPlayer);
+
+                    board = originalBoard;
+                    whiteTurn = originalWhiteTurn;
+
+                    if (!stillInCheck)
+                        return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 std::string ChessEngine::getTurn() const
 {
     return whiteTurn ? "white" : "black";

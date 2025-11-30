@@ -28,12 +28,14 @@ void NativeChessModule::reset(jsi::Runtime &rt) {
   engine->reset();
 }
 
-bool NativeChessModule::makeMove(jsi::Runtime &rt, std::string move) {
+std::string NativeChessModule::makeMove(jsi::Runtime &rt, std::string move) {
   return engine->makeMove(move);
 }
 
 std::string NativeChessModule::getTurn(jsi::Runtime &rt) {
   return engine->getTurn();
 }
-
+bool NativeChessModule::isCheckmate(jsi::Runtime &rt, bool white) {
+  return engine->isCheckmate(white);
+}
 } 

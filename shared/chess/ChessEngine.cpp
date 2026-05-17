@@ -28,7 +28,10 @@ std::string ChessEngine::makeMove(const std::string &move) {
     int fromY = move[0] - 'a';
     int toX = 8 - (move[3] - '0');
     int toY = move[2] - 'a';
-
+    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8 ||
+        toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
+        return "invalid";
+    }
     std::string piece = board[fromX][fromY];
     if (piece.empty()) return "invalid";
 
@@ -57,7 +60,7 @@ std::string ChessEngine::makeMove(const std::string &move) {
     }
 
     whiteTurn = !whiteTurn;
-    
+
     if (isInCheck(!isWhitePiece)) {
         if (isCheckmate(!isWhitePiece))
             return "checkmate";

@@ -15,6 +15,7 @@ public:
     bool isSquareAttacked(int x, int y, bool byWhite) const;
     bool isCheckmate(bool white);
     bool canCastle(bool white, bool kingSide) const;
+    std::vector<std::string> getValidMoves(const std::string &square);
 
 private:
     std::vector<std::vector<std::string>> board;

@@ -38,4 +38,13 @@ std::string NativeChessModule::getTurn(jsi::Runtime &rt) {
 bool NativeChessModule::isCheckmate(jsi::Runtime &rt, bool white) {
   return engine->isCheckmate(white);
 }
+
+jsi::Array NativeChessModule::getValidMoves(jsi::Runtime &rt, std::string square) {
+  auto moves = engine->getValidMoves(square);
+  jsi::Array jsArray(rt, moves.size());
+  for (size_t i = 0; i < moves.size(); i++) {
+    jsArray.setValueAtIndex(rt, i, jsi::String::createFromUtf8(rt, moves[i]));
+  }
+  return jsArray;
+}
 } 

@@ -297,3 +297,68 @@ bool ChessEngine::canCastle(bool white, bool kingSide) const
 
     return true;
 }
+
+std::vector<std::string> ChessEngine::getValidMoves(const std::string &square)
+{
+    std::vector<std::string> moves;
+    if (square.length() != 2) return moves;
+
+    int fromY = square[0] - 'a';
+    int fromX = 8 - (square[1] - '0');
+    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8) return moves;
+
+    std::string piece = board[fromX][fromY];
+    if (piece.empty()) return moves;
+
+    bool isWhitePiece = isupper(piece[0]);
+    if (whiteTurn != isWhitePiece) return moves;
+
+    auto squareName = [](int x, int y) -> std::string {
+        return std::string(1, 'a' + y) + std::string(1, '0' + (8 - x));
+    };
+
+    for (int toX = 0; toX < 8; toX++) {
+        for (int toY = 0; toY < 8; toY++) {
+            if (toX == fromX && toY == fromY) continue;
+
+            // Check castling
+            bool isCastling = false;
+            bool castleKingSide = false;
+            if (tolower(piece[0]) == 'k' && fromY == 4 && abs(toY - fromY) == 2 && fromX == toX) {
+                castleKingSide = (toY == 6);
+                if (canCastle(isWhitePiece, castleKingSide)) {
+                    isCastling = true;
+                } else {
+                    continue;
+                }
+            }
+
+            if (!isCastling) {
+                if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) continue;
+                if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) continue;
+            }
+
+            // Simulate the move and check if it leaves own king in check
+            auto savedBoard = board;
+            if (isCastling) {
+                board[toX][toY] = piece;
+                board[fromX][fromY] = "";
+                int rookFromY = castleKingSide ? 7 : 0;
+                int rookToY   = castleKingSide ? 5 : 3;
+                board[toX][rookToY] = board[toX][rookFromY];
+                board[toX][rookFromY] = "";
+            } else {
+                board[toX][toY] = piece;
+                board[fromX][fromY] = "";
+            }
+
+            bool inCheck = isInCheck(isWhitePiece);
+            board = savedBoard;
+
+            if (!inCheck) {
+                moves.push_back(squareName(toX, toY));
+            }
+        }
+    }
+    return moves;
+}

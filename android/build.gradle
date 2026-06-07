@@ -19,3 +19,17 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// Workaround for AGP lint crash: "Cannot find a KaModule for the VirtualFile"
+// Affects any subproject using build.gradle.kts (e.g. reanimated, worklets).
+// Android Lint cannot process .kts build scripts via the Kotlin Analysis API.
+subprojects { subproject ->
+    def buildFileName = subproject.buildFile.name
+    if (buildFileName.endsWith(".kts")) {
+        subproject.tasks.configureEach { task ->
+            if (task.name.startsWith("lint")) {
+                task.enabled = false
+            }
+        }
+    }
+}

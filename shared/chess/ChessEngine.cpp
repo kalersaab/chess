@@ -14,6 +14,12 @@ void ChessEngine::reset()
         {"P", "P", "P", "P", "P", "P", "P", "P"},
         {"R", "N", "B", "Q", "K", "B", "N", "R"}};
     whiteTurn = true;
+    whiteKingMoved = false;
+    blackKingMoved = false;
+    whiteRookAMoved = false;
+    whiteRookHMoved = false;
+    blackRookAMoved = false;
+    blackRookHMoved = false;
 }
 std::vector<std::vector<std::string>> ChessEngine::getBoard() const
 {
@@ -38,24 +44,62 @@ std::string ChessEngine::makeMove(const std::string &move) {
     bool isWhitePiece = isupper(piece[0]);
     if (whiteTurn != isWhitePiece) return "invalid";
 
-    if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) return "invalid";
-    if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) return "invalid";
+    bool isCastling = false;
+    bool castleKingSide = false;
+    if (tolower(piece[0]) == 'k' && fromY == 4 && abs(toY - fromY) == 2 && fromX == toX) {
+        castleKingSide = (toY == 6);
+        if (!canCastle(isWhitePiece, castleKingSide)) return "invalid";
+        isCastling = true;
+    }
+
+    if (!isCastling) {
+        if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) return "invalid";
+        if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) return "invalid";
+    }
 
     auto oldBoard = board;
     bool oldTurn = whiteTurn;
+    bool oldWhiteKingMoved  = whiteKingMoved;
+    bool oldBlackKingMoved  = blackKingMoved;
+    bool oldWhiteRookAMoved = whiteRookAMoved;
+    bool oldWhiteRookHMoved = whiteRookHMoved;
+    bool oldBlackRookAMoved = blackRookAMoved;
+    bool oldBlackRookHMoved = blackRookHMoved;
 
-    board[toX][toY] = piece;
-    board[fromX][fromY] = "";
+    if (isCastling) {
+        board[toX][toY] = piece;
+        board[fromX][fromY] = "";
+        int rookFromY = castleKingSide ? 7 : 0;
+        int rookToY   = castleKingSide ? 5 : 3;
+        board[toX][rookToY] = board[toX][rookFromY];
+        board[toX][rookFromY] = "";
+    } else {
+        board[toX][toY] = piece;
+        board[fromX][fromY] = "";
 
-    if (isPromotion && tolower(piece[0]) == 'p' && (toX == 0 || toX == 7)) {
-        char promoChar = isWhitePiece ? toupper(promotionPiece)
-                                      : tolower(promotionPiece);
-        board[toX][toY] = std::string(1, promoChar);
+        if (isPromotion && tolower(piece[0]) == 'p' && (toX == 0 || toX == 7)) {
+            char promoChar = isWhitePiece ? toupper(promotionPiece)
+                                          : tolower(promotionPiece);
+            board[toX][toY] = std::string(1, promoChar);
+        }
     }
+
+    if (piece == "K") whiteKingMoved = true;
+    if (piece == "k") blackKingMoved = true;
+    if (fromX == 7 && fromY == 0) whiteRookAMoved = true;
+    if (fromX == 7 && fromY == 7) whiteRookHMoved = true;
+    if (fromX == 0 && fromY == 0) blackRookAMoved = true;
+    if (fromX == 0 && fromY == 7) blackRookHMoved = true;
 
     if (isInCheck(isWhitePiece)) {
         board = oldBoard;
         whiteTurn = oldTurn;
+        whiteKingMoved  = oldWhiteKingMoved;
+        blackKingMoved  = oldBlackKingMoved;
+        whiteRookAMoved = oldWhiteRookAMoved;
+        whiteRookHMoved = oldWhiteRookHMoved;
+        blackRookAMoved = oldBlackRookAMoved;
+        blackRookHMoved = oldBlackRookHMoved;
         return "false";
     }
 
@@ -220,4 +264,101 @@ bool ChessEngine::isCheckmate(bool isWhiteTurnPlayer) {
 std::string ChessEngine::getTurn() const
 {
     return whiteTurn ? "white" : "black";
+}
+
+bool ChessEngine::canCastle(bool white, bool kingSide) const
+{
+    if (white && whiteKingMoved) return false;
+    if (!white && blackKingMoved) return false;
+
+    if (white  &&  kingSide && whiteRookHMoved) return false;
+    if (white  && !kingSide && whiteRookAMoved) return false;
+    if (!white &&  kingSide && blackRookHMoved) return false;
+    if (!white && !kingSide && blackRookAMoved) return false;
+
+    int row = white ? 7 : 0;
+
+    std::string expectedRook = white ? "R" : "r";
+    int rookCol = kingSide ? 7 : 0;
+    if (board[row][rookCol] != expectedRook) return false;
+    if (kingSide) {
+        if (!board[row][5].empty() || !board[row][6].empty()) return false;
+    } else {
+        if (!board[row][1].empty() || !board[row][2].empty() || !board[row][3].empty()) return false;
+    }
+
+    bool byWhiteAttacker = !white;
+    int kingPassY1 = kingSide ? 5 : 3;
+    int kingDestY  = kingSide ? 6 : 2;
+
+    if (isSquareAttacked(row, 4,        byWhiteAttacker)) return false;
+    if (isSquareAttacked(row, kingPassY1, byWhiteAttacker)) return false;
+    if (isSquareAttacked(row, kingDestY,  byWhiteAttacker)) return false;
+
+    return true;
+}
+
+std::vector<std::string> ChessEngine::getValidMoves(const std::string &square)
+{
+    std::vector<std::string> moves;
+    if (square.length() != 2) return moves;
+
+    int fromY = square[0] - 'a';
+    int fromX = 8 - (square[1] - '0');
+    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8) return moves;
+
+    std::string piece = board[fromX][fromY];
+    if (piece.empty()) return moves;
+
+    bool isWhitePiece = isupper(piece[0]);
+    if (whiteTurn != isWhitePiece) return moves;
+
+    auto squareName = [](int x, int y) -> std::string {
+        return std::string(1, 'a' + y) + std::string(1, '0' + (8 - x));
+    };
+
+    for (int toX = 0; toX < 8; toX++) {
+        for (int toY = 0; toY < 8; toY++) {
+            if (toX == fromX && toY == fromY) continue;
+
+            // Check castling
+            bool isCastling = false;
+            bool castleKingSide = false;
+            if (tolower(piece[0]) == 'k' && fromY == 4 && abs(toY - fromY) == 2 && fromX == toX) {
+                castleKingSide = (toY == 6);
+                if (canCastle(isWhitePiece, castleKingSide)) {
+                    isCastling = true;
+                } else {
+                    continue;
+                }
+            }
+
+            if (!isCastling) {
+                if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) continue;
+                if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) continue;
+            }
+
+            // Simulate the move and check if it leaves own king in check
+            auto savedBoard = board;
+            if (isCastling) {
+                board[toX][toY] = piece;
+                board[fromX][fromY] = "";
+                int rookFromY = castleKingSide ? 7 : 0;
+                int rookToY   = castleKingSide ? 5 : 3;
+                board[toX][rookToY] = board[toX][rookFromY];
+                board[toX][rookFromY] = "";
+            } else {
+                board[toX][toY] = piece;
+                board[fromX][fromY] = "";
+            }
+
+            bool inCheck = isInCheck(isWhitePiece);
+            board = savedBoard;
+
+            if (!inCheck) {
+                moves.push_back(squareName(toX, toY));
+            }
+        }
+    }
+    return moves;
 }

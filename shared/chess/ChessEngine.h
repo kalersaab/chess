@@ -10,12 +10,21 @@ public:
     std::string getTurn() const;
     std::vector<std::vector<std::string>> getBoard() const;
     bool isValidPieceMove(const std::string &piece, int fromX, int fromY, int toX, int toY) const;
-    bool isPathClear(int fromX, int fromY, int toX, int toY)const;
+    bool isPathClear(int fromX, int fromY, int toX, int toY) const;
     bool isInCheck(bool white) const;
     bool isSquareAttacked(int x, int y, bool byWhite) const;
     bool isCheckmate(bool white);
+    bool canCastle(bool white, bool kingSide) const;
+    std::vector<std::string> getValidMoves(const std::string &square);
 
 private:
     std::vector<std::vector<std::string>> board;
     bool whiteTurn;
+
+    bool whiteKingMoved;
+    bool blackKingMoved;
+    bool whiteRookAMoved;
+    bool whiteRookHMoved;
+    bool blackRookAMoved;
+    bool blackRookHMoved;
 };

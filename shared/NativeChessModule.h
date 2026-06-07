@@ -19,6 +19,7 @@ namespace facebook::react
     std::string getTurn(jsi::Runtime &rt);
     jsi::Array getBoard(jsi::Runtime &rt);
     bool isCheckmate(jsi::Runtime &rt, bool white);
+    jsi::Array getValidMoves(jsi::Runtime &rt, std::string square);
 
   private:
     std::unique_ptr<ChessEngine> engine;

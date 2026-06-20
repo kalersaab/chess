@@ -39,15 +39,16 @@ private:
     int enPassantX;
     int enPassantY;
 
-    // AI helpers
     struct Move {
         int fromX, fromY, toX, toY;
-        char promotion; // '\0' = none, else 'q','r','b','n'
+        char promotion;
     };
 
-    std::vector<Move> generateAllMoves(bool white);
+    std::vector<Move> generateAllMoves(bool white) const;
+    std::vector<Move> generateAllCaptureMoves(bool white) const;
+    int quiescence(int alpha, int beta, bool maximizing);
     std::string moveToUCI(const Move &m) const;
-    bool applyMove(const Move &m);   // returns false if illegal (leaves king in check)
+    bool applyMove(const Move &m);
     void undoMove(const Move &m,
                   const std::vector<std::vector<std::string>> &savedBoard,
                   bool savedWhiteTurn,

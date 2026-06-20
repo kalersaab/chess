@@ -589,7 +589,7 @@ int ChessEngine::evaluate() const {
     return score;
 }
 
-std::vector<ChessEngine::Move> ChessEngine::generateAllMoves(bool white) {
+std::vector<ChessEngine::Move> ChessEngine::generateAllMoves(bool white) const {
     std::vector<Move> moves;
     moves.reserve(64);
 
@@ -629,6 +629,26 @@ std::vector<ChessEngine::Move> ChessEngine::generateAllMoves(bool white) {
         }
     }
     return moves;
+}
+
+std::vector<ChessEngine::Move> ChessEngine::generateAllCaptureMoves(bool white) const {
+    if (isInCheck(white))
+        return generateAllMoves(white);
+
+    std::vector<Move> captures;
+    auto allMoves = generateAllMoves(white);
+    captures.reserve(allMoves.size());
+
+    for (const auto &m : allMoves) {
+        const std::string &piece = board[m.fromX][m.fromY];
+        bool isPawn = tolower(piece[0]) == 'p';
+        bool isEnPassant = isPawn && abs(m.toY - m.fromY) == 1 && board[m.toX][m.toY].empty() &&
+                           m.toX == enPassantX && m.toY == enPassantY;
+        if (!board[m.toX][m.toY].empty() || isEnPassant || m.promotion != '\0') {
+            captures.push_back(m);
+        }
+    }
+    return captures;
 }
 
 std::string ChessEngine::moveToUCI(const Move &m) const {
@@ -698,8 +718,91 @@ void ChessEngine::undoMove(const Move &,
     enPassantY     = savedEpY;
 }
 
+int ChessEngine::quiescence(int alpha, int beta, bool maximizing) {
+    int standPat = evaluate();
+    if (maximizing) {
+        if (standPat >= beta) return beta;
+        if (alpha < standPat) alpha = standPat;
+    } else {
+        if (standPat <= alpha) return alpha;
+        if (beta > standPat) beta = standPat;
+    }
+
+    auto moves = generateAllCaptureMoves(maximizing);
+    if (moves.empty()) return standPat;
+
+    std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
+        int aValue = board[a.toX][a.toY].empty() ? 0 : pieceValue(tolower(board[a.toX][a.toY][0]));
+        int bValue = board[b.toX][b.toY].empty() ? 0 : pieceValue(tolower(board[b.toX][b.toY][0]));
+        if (a.promotion != '\0') aValue += 900;
+        if (b.promotion != '\0') bValue += 900;
+        return maximizing ? (aValue > bValue) : (aValue < bValue);
+    });
+
+    bool anyLegal = false;
+    if (maximizing) {
+        int best = std::numeric_limits<int>::min();
+        for (auto &m : moves) {
+            auto sb = board; bool swt = whiteTurn;
+            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
+            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
+            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
+            int sepx = enPassantX, sepy = enPassantY;
+
+            whiteTurn = maximizing;
+            bool legal = applyMove(m);
+            if (!legal) {
+                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
+                continue;
+            }
+            anyLegal = true;
+            whiteTurn = !maximizing;
+
+            int score = quiescence(alpha, beta, false);
+            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
+
+            best = std::max(best, score);
+            alpha = std::max(alpha, best);
+            if (beta <= alpha) break;
+        }
+        if (!anyLegal) {
+            return isInCheck(maximizing) ? std::numeric_limits<int>::min() + 1 : standPat;
+        }
+        return best;
+    } else {
+        int best = std::numeric_limits<int>::max();
+        for (auto &m : moves) {
+            auto sb = board; bool swt = whiteTurn;
+            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
+            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
+            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
+            int sepx = enPassantX, sepy = enPassantY;
+
+            whiteTurn = maximizing;
+            bool legal = applyMove(m);
+            if (!legal) {
+                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
+                continue;
+            }
+            anyLegal = true;
+            whiteTurn = !maximizing;
+
+            int score = quiescence(alpha, beta, true);
+            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
+
+            best = std::min(best, score);
+            beta = std::min(beta, best);
+            if (beta <= alpha) break;
+        }
+        if (!anyLegal) {
+            return isInCheck(maximizing) ? std::numeric_limits<int>::max() - 1 : standPat;
+        }
+        return best;
+    }
+}
+
 int ChessEngine::alphaBeta(int depth, int alpha, int beta, bool maximizing) {
-    if (depth == 0) return evaluate();
+    if (depth == 0) return quiescence(alpha, beta, maximizing);
 
     bool side = maximizing;
     auto moves = generateAllMoves(side);

@@ -10,12 +10,12 @@ interface SquareProps extends RowProps{
 }
 const Square = ({row, col}:SquareProps) => {
     const offset = row % 2 === 0 ? 1 : 0;
-    const backgroundColor = (col +offset) % 2 === 0 ? White : Black;
-    const color = (col +offset) % 2 === 0 ? Black : White;
+    const backgroundColor = (col +offset) % 2 === 0 ? Black :White;
+    const color = (col +offset) % 2 === 0 ? White : Black;
     return(
         <View style={{flex:1, backgroundColor, padding:4, justifyContent:'space-between'}}>
-            <Text style={{color, fontWeight:"500", opacity:col ===0?1:0}}>{8-row}</Text>
-            <Text style={{color, fontWeight:"500", alignSelf:"flex-end",opacity:row ===7?1:0}}>{String.fromCharCode('a'.charCodeAt(0) + col)}</Text>
+            <Text style={{color, fontWeight:"500", opacity:col ===0 ? 1: 0}}>{8-row}</Text>
+            <Text style={{color, fontWeight:"500", alignSelf:"flex-end",opacity:row ===7 ? 1: 0}}>{String.fromCharCode('a'.charCodeAt(0) + col)}</Text>
         </View>
     )
 }
@@ -39,5 +39,3 @@ const Background = () => {
 }
 
 export default Background
-
-const styles = StyleSheet.create({})

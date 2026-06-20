@@ -27,4 +27,6 @@ private:
     bool whiteRookHMoved;
     bool blackRookAMoved;
     bool blackRookHMoved;
+    int enPassantX;
+    int enPassantY;
 };

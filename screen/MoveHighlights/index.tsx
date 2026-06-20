@@ -1,40 +1,61 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { useSelection } from '../SelectionContext';
+import { PIECE_COLOR, PIECE_TYPE } from '../../helper';
+import { useSelection } from '../../context';
 
 const { width } = Dimensions.get('window');
 const SIZE = width / 8;
 
 interface Props {
   onSquareTap: (toSquare: string) => void;
+  currentTurn: PIECE_COLOR;
+  board: string[][];
 }
 
 const colToLetter = (x: number) => String.fromCharCode(97 + x);
 const posToSquare = (x: number, y: number) => `${colToLetter(x)}${8 - y}`;
 
-const MoveHighlights = ({ onSquareTap }: Props) => {
-  const { highlights } = useSelection();
+const squareToPos = (sq: string) => ({
+  x: sq.charCodeAt(0) - 97,
+  y: 8 - parseInt(sq[1], 10),
+});
+
+const MoveHighlights = ({ onSquareTap, currentTurn, board }: Props) => {
+  const { highlights, selectedSquare } = useSelection();
+
+  const isCorrectTurn = (() => {
+    if (!selectedSquare) return false;
+    const { x, y } = squareToPos(selectedSquare);
+    const piece = board[y]?.[x];
+    if (!piece) return false;
+    const isWhitePiece = piece === piece.toUpperCase();
+    return (
+      (currentTurn === PIECE_COLOR.white && isWhitePiece) ||
+      (currentTurn === PIECE_COLOR.black && !isWhitePiece)
+    );
+  })();
+
+  if (!isCorrectTurn) return null;
 
   return (
     <>
       {highlights.map(({ x, y, type }) => {
         const square = posToSquare(x, y);
 
-        if (type === 'selected') {
+        if (type === PIECE_TYPE.Selected) {
           return (
             <View
               key={`sel-${x}-${y}`}
               pointerEvents="none"
               style={[
                 styles.base,
-                { left: x * SIZE, top: y * SIZE, backgroundColor: 'rgba(20, 85, 30, 0.5)' },
+                { left: x * SIZE, top: y * SIZE, borderWidth:12, borderRadius:20, borderColor:'rgba(5, 83, 53, 0.5)'},
               ]}
             />
           );
         }
 
-        if (type === 'capture') {
-          // Capture: ring overlay — piece underneath handles the tap via Piece's own tap gesture
+        if (type === PIECE_TYPE.Capture) {
           return (
             <TouchableOpacity
               key={`cap-${x}-${y}`}
@@ -47,7 +68,6 @@ const MoveHighlights = ({ onSquareTap }: Props) => {
           );
         }
 
-        // Empty valid square — full tap target with dot
         return (
           <TouchableOpacity
             key={`mv-${x}-${y}`}

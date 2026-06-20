@@ -32,9 +32,26 @@ std::string NativeChessModule::makeMove(jsi::Runtime &rt, std::string move) {
   return engine->makeMove(move);
 }
 
+int NativeChessModule::getWhiteTime(jsi::Runtime &rt) {
+  return engine->getWhiteTime();
+}
+
+int NativeChessModule::getBlackTime(jsi::Runtime &rt) {
+  return engine->getBlackTime();
+}
+
+bool NativeChessModule::tick(jsi::Runtime &rt, bool white) {
+  return engine->tick(white);
+}
+
+void NativeChessModule::resetTimer(jsi::Runtime &rt) {
+  engine->resetTimer();
+}
+
 std::string NativeChessModule::getTurn(jsi::Runtime &rt) {
   return engine->getTurn();
 }
+
 bool NativeChessModule::isCheckmate(jsi::Runtime &rt, bool white) {
   return engine->isCheckmate(white);
 }
@@ -46,5 +63,9 @@ jsi::Array NativeChessModule::getValidMoves(jsi::Runtime &rt, std::string square
     jsArray.setValueAtIndex(rt, i, jsi::String::createFromUtf8(rt, moves[i]));
   }
   return jsArray;
+}
+
+std::string NativeChessModule::getBestMove(jsi::Runtime &rt, bool white, int depth) {
+  return engine->getBestMove(white, depth);
 }
 } 

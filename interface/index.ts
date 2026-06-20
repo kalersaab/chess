@@ -1,4 +1,5 @@
 import { PIECE_COLOR, PIECE_TYPE } from "../helper";
+import { GameMode } from "../screen/Home";
 import { PIECES } from "../utils";
 
 export interface HighlightSquare {
@@ -32,3 +33,16 @@ export interface SelectionState {
   pendingMoveTarget: string | null;
   setPendingMoveTarget: (square: string | null) => void;
 }
+
+export interface ClockProps {
+  label: string;
+  seconds: number;
+  isActive: boolean;
+  isLow: boolean;
+}
+
+export interface BoardProps {
+  gameMode: GameMode;
+  onBack: () => void;
+}
+

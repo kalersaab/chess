@@ -6,6 +6,8 @@ type Type = "q" | "r" | "n" | "b" | "k" | "p"| "Q" | "R" | "N" | "B" | "K" | "P"
 type Piece = `${Type}`;
 type Pieces = Record<Piece, ImageSourcePropType>;
 
+export const CLOCK_HEIGHT = 72;
+
  export const PIECES: Pieces = {
   r: require("../assets/img/br.png"),
   p: require("../assets/img/bp.png"),
@@ -27,3 +29,9 @@ export const positionToSquare = (x: number, y: number) => {
   const row = `${8 - Math.round(y / SIZE)}`;
   return `${col}${row}`;
 };
+
+export const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}

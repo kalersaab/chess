@@ -6,7 +6,12 @@ export interface Spec extends TurboModule {
   isCheckmate(white: boolean): Promise<boolean>;
   getTurn(): string;
   reset(): void;
+  resetTimer(): void;
+  getWhiteTime(): number;
+  getBlackTime(): number;
+  tick(white: boolean): boolean;
   getValidMoves(square: string): string[];
+  getBestMove(white: boolean, depth: number): string;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

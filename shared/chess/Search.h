@@ -1,31 +1,25 @@
 #pragma once
 #include "BoardState.h"
 #include "MoveGen.h"
+#include "TranspositionTable.h"
 #include <string>
 #include <vector>
+#include <array>
 #include <functional>
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Searcher — alpha-beta + quiescence search
-//
-// Operates on a BoardSnapshot reference so the engine stays in control
-// of the actual board state; Search only borrows and restores it.
-// ─────────────────────────────────────────────────────────────────────────────
+static constexpr int MAX_PLY = 64;
+static constexpr int KILLERS_PER_PLY = 2;
 
 class Searcher {
 public:
-    // 'state' is the live engine state that Search will mutate and restore.
-    // 'isInCheckFn' / 'isValidMoveFn' / 'canCastleFn' are callbacks into
-    // ChessEngine so Search does not duplicate rule logic.
     explicit Searcher(
-        BoardSnapshot                                               &state,
-        std::function<bool(bool white)>                             isInCheckFn,
+        BoardSnapshot                                                &state,
+        std::function<bool(bool)>                                    isInCheckFn,
         std::function<bool(const std::string &, int, int, int, int)> isValidMoveFn,
-        std::function<bool(bool, bool)>                             canCastleFn
+        std::function<bool(bool, bool)>                              canCastleFn
     );
 
-    // Returns UCI string of the best move for 'white' at the given depth.
-    std::string getBestMove(bool white, int depth);
+    std::string getBestMove(bool white, int maxDepth);
 
 private:
     BoardSnapshot &state;
@@ -34,15 +28,22 @@ private:
     std::function<bool(const std::string &, int, int, int, int)>     isValidMove;
     std::function<bool(bool, bool)>                                   canCastle;
 
-    MoveGenContext makeCtx() const;
+    TranspositionTable tt;
 
-    // Apply move onto state.board; returns false if move leaves own king in check
+    std::array<std::array<Move, KILLERS_PER_PLY>, MAX_PLY> killers;
+
+    int history[2][64][64];
+
+    MoveGenContext makeCtx() const;
     bool applyMove(const Move &m);
     void undoMove(const BoardSnapshot &saved);
 
-    // Quiescence search — resolves captures at leaf nodes to avoid horizon effect
-    int quiescence(int alpha, int beta, bool maximizing);
+    void orderMovesEx(std::vector<Move> &moves,
+                      const Move &ttBest,
+                      int ply) const;
 
-    // Alpha-beta with quiescence at depth == 0
-    int alphaBeta(int depth, int alpha, int beta, bool maximizing);
+    void storeKiller(int ply, const Move &m);
+
+    int quiescence(int alpha, int beta, bool maximizing);
+    int alphaBeta(int depth, int ply, int alpha, int beta, bool maximizing);
 };

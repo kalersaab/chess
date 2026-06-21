@@ -1,51 +1,44 @@
 #include "ChessEngine.h"
+#include "MoveGen.h"
+#include "Search.h"
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 
-static const int DEFAULT_TIME_SECONDS = 10 * 60;
+ChessEngine::ChessEngine() {
+    whiteSeconds = DEFAULT_TIME;
+    blackSeconds = DEFAULT_TIME;
+    reset();
+}
 
-ChessEngine::ChessEngine() { reset(); }
-
-void ChessEngine::reset()
-{
-    board = {
-        {"r", "n", "b", "q", "k", "b", "n", "r"},
-        {"p", "p", "p", "p", "p", "p", "p", "p"},
-        {"", "", "", "", "", "", "", ""},
-        {"", "", "", "", "", "", "", ""},
-        {"", "", "", "", "", "", "", ""},
-        {"", "", "", "", "", "", "", ""},
-        {"P", "P", "P", "P", "P", "P", "P", "P"},
-        {"R", "N", "B", "Q", "K", "B", "N", "R"}};
-    whiteTurn = true;
-    whiteKingMoved = false;
-    blackKingMoved = false;
-    whiteRookAMoved = false;
-    whiteRookHMoved = false;
-    blackRookAMoved = false;
-    blackRookHMoved = false;
-    enPassantX = -1;
-    enPassantY = -1;
+void ChessEngine::reset() {
+    snap.board = {
+        {"r","n","b","q","k","b","n","r"},
+        {"p","p","p","p","p","p","p","p"},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"P","P","P","P","P","P","P","P"},
+        {"R","N","B","Q","K","B","N","R"},
+    };
+    snap.whiteTurn      = true;
+    snap.whiteKingMoved = snap.blackKingMoved  = false;
+    snap.whiteRookAMoved= snap.whiteRookHMoved = false;
+    snap.blackRookAMoved= snap.blackRookHMoved = false;
+    snap.enPassantX     = snap.enPassantY      = -1;
     resetTimer();
 }
 
-void ChessEngine::resetTimer()
-{
-    whiteSeconds = DEFAULT_TIME_SECONDS;
-    blackSeconds = DEFAULT_TIME_SECONDS;
+void ChessEngine::resetTimer() {
+    whiteSeconds = DEFAULT_TIME;
+    blackSeconds = DEFAULT_TIME;
 }
 
-int ChessEngine::getWhiteTime() const
-{
-    return whiteSeconds;
-}
+int ChessEngine::getWhiteTime() const { return whiteSeconds; }
+int ChessEngine::getBlackTime() const { return blackSeconds; }
 
-int ChessEngine::getBlackTime() const
-{
-    return blackSeconds;
-}
-
-bool ChessEngine::tick(bool white, int seconds)
-{
+bool ChessEngine::tick(bool white, int seconds) {
     if (white) {
         whiteSeconds = std::max(0, whiteSeconds - seconds);
         return whiteSeconds > 0;
@@ -54,870 +47,319 @@ bool ChessEngine::tick(bool white, int seconds)
     return blackSeconds > 0;
 }
 
-std::vector<std::vector<std::string>> ChessEngine::getBoard() const
-{
-    return board;
-}
-std::string ChessEngine::makeMove(const std::string &move) {
-    if (move.length() != 4 && move.length() != 5) return "invalid";
-
-    int fromX = 8 - (move[1] - '0');
-    int fromY = move[0] - 'a';
-    int toX = 8 - (move[3] - '0');
-    int toY = move[2] - 'a';
-    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8 ||
-        toX < 0 || toX >= 8 || toY < 0 || toY >= 8) {
-        return "invalid";
-    }
-    std::string piece = board[fromX][fromY];
-    if (piece.empty()) return "invalid";
-
-    bool isWhitePiece = isupper(piece[0]);
-    if (whiteTurn != isWhitePiece) return "invalid";
-    int promotionRow = isWhitePiece ? 0 : 7;
-    bool isPawnMove = (tolower(piece[0]) == 'p');
-    bool reachesPromotionRow = isPawnMove && (toX == promotionRow);
-
-    bool isPromotion = false;
-    char promotionPiece = 'q'; 
-    if (reachesPromotionRow) {
-        if (move.length() != 5) return "invalid";
-        char raw = tolower(move[4]);
-        if (raw != 'q' && raw != 'r' && raw != 'b' && raw != 'n') return "invalid";
-        isPromotion = true;
-        promotionPiece = raw;
-    } else {
-        if (move.length() == 5) return "invalid";
-    }
-
-    bool isCastling = false;
-    bool castleKingSide = false;
-    if (tolower(piece[0]) == 'k' && fromY == 4 && abs(toY - fromY) == 2 && fromX == toX) {
-        castleKingSide = (toY == 6);
-        if (!canCastle(isWhitePiece, castleKingSide)) return "invalid";
-        isCastling = true;
-    }
-
-    if (!isCastling) {
-        if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) return "invalid";
-        if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) return "invalid";
-    }
-
-    auto oldBoard = board;
-    bool oldTurn = whiteTurn;
-    bool oldWhiteKingMoved  = whiteKingMoved;
-    bool oldBlackKingMoved  = blackKingMoved;
-    bool oldWhiteRookAMoved = whiteRookAMoved;
-    bool oldWhiteRookHMoved = whiteRookHMoved;
-    bool oldBlackRookAMoved = blackRookAMoved;
-    bool oldBlackRookHMoved = blackRookHMoved;
-    int oldEnPassantX = enPassantX;
-    int oldEnPassantY = enPassantY;
-
-    bool isEnPassant = false;
-    int capturedPawnX = -1, capturedPawnY = -1;
-    if (tolower(piece[0]) == 'p' && abs(toY - fromY) == 1 &&
-        board[toX][toY].empty() && toX == enPassantX && toY == enPassantY)
-    {
-        isEnPassant = true;
-        capturedPawnX = fromX;
-        capturedPawnY = toY;
-    }
-
-    if (isCastling) {
-        board[toX][toY] = piece;
-        board[fromX][fromY] = "";
-        int rookFromY = castleKingSide ? 7 : 0;
-        int rookToY   = castleKingSide ? 5 : 3;
-        board[toX][rookToY] = board[toX][rookFromY];
-        board[toX][rookFromY] = "";
-    } else {
-        board[toX][toY] = piece;
-        board[fromX][fromY] = "";
-
-        if (isEnPassant) {
-            board[capturedPawnX][capturedPawnY] = "";
-        }
-
-        if (isPromotion) {
-            char promoChar = isWhitePiece ? toupper(promotionPiece)
-                                          : tolower(promotionPiece);
-            board[toX][toY] = std::string(1, promoChar);
-        }
-    }
-
-    enPassantX = -1;
-    enPassantY = -1;
-    if (tolower(piece[0]) == 'p' && abs(toX - fromX) == 2) {
-        enPassantX = (fromX + toX) / 2;
-        enPassantY = fromY;
-    }
-
-    if (piece == "K") whiteKingMoved = true;
-    if (piece == "k") blackKingMoved = true;
-    if (fromX == 7 && fromY == 0) whiteRookAMoved = true;
-    if (fromX == 7 && fromY == 7) whiteRookHMoved = true;
-    if (fromX == 0 && fromY == 0) blackRookAMoved = true;
-    if (fromX == 0 && fromY == 7) blackRookHMoved = true;
-
-    if (isInCheck(isWhitePiece)) {
-        board = oldBoard;
-        whiteTurn = oldTurn;
-        whiteKingMoved  = oldWhiteKingMoved;
-        blackKingMoved  = oldBlackKingMoved;
-        whiteRookAMoved = oldWhiteRookAMoved;
-        whiteRookHMoved = oldWhiteRookHMoved;
-        blackRookAMoved = oldBlackRookAMoved;
-        blackRookHMoved = oldBlackRookHMoved;
-        enPassantX = oldEnPassantX;
-        enPassantY = oldEnPassantY;
-        return "false";
-    }
-
-    whiteTurn = !whiteTurn;
-
-    if (isInCheck(!isWhitePiece)) {
-        if (isCheckmate(!isWhitePiece))
-            return "checkmate";
-        return "check";
-    }
-
-    return "valid";
+std::vector<std::vector<std::string>> ChessEngine::getBoard() const {
+    return snap.board;
 }
 
-bool ChessEngine::isInCheck(bool white) const {
-    int kingX = -1, kingY = -1;
-    char kingChar = white ? 'K' : 'k';
-
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            if (board[x][y] == std::string(1, kingChar)) {
-                kingX = x; kingY = y;
-                break;
-            }
-        }
-    }
-
-    if (kingX == -1) return false;
-    return isSquareAttacked(kingX, kingY, !white);
+std::string ChessEngine::getTurn() const {
+    return snap.whiteTurn ? "white" : "black";
 }
 
-bool ChessEngine::isSquareAttacked(int x, int y, bool byWhite) const {
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 8; j++) {
-            if (!board[i][j].empty() && (isupper(board[i][j][0]) == byWhite)) {
-                if (isValidPieceMove(board[i][j], i, j, x, y)) {
-                    return true;
-                }
-            }
-        }
+bool ChessEngine::isPathClear(int fromX, int fromY, int toX, int toY) const {
+    int stepX = toX == fromX ? 0 : (toX - fromX) / std::abs(toX - fromX);
+    int stepY = toY == fromY ? 0 : (toY - fromY) / std::abs(toY - fromY);
+    int x = fromX + stepX, y = fromY + stepY;
+    while (x != toX || y != toY) {
+        if (!snap.board[x][y].empty()) return false;
+        x += stepX; y += stepY;
     }
-    return false;
+    return true;
 }
 
-bool ChessEngine::isValidPieceMove(const std::string &piece, int fromX, int fromY, int toX, int toY) const
-{
-    bool isWhitePiece = isupper(piece[0]);
-    char p = tolower(piece[0]);
-    int dx = toX - fromX;
-    int dy = toY - fromY;
+bool ChessEngine::isValidPieceMove(const std::string &piece,
+                                   int fromX, int fromY,
+                                   int toX,   int toY) const {
+    bool isWhitePiece = isupper(piece[0]) != 0;
+    char p  = (char)tolower(piece[0]);
+    int  dx = toX - fromX;
+    int  dy = toY - fromY;
 
-    switch (p)
-    {
-    case 'p':
-    {
-        int direction = isWhitePiece ? -1 : 1;
-        int startRow = isWhitePiece ? 6 : 1;
-        int promotionRow = isWhitePiece ? 0 : 7;
+    switch (p) {
+    case 'p': {
+        int dir      = isWhitePiece ? -1 : 1;
+        int startRow = isWhitePiece ?  6 :  1;
 
-        if (dy == 0 && board[toX][toY].empty())
-        {
-            if (dx == direction)
-            {
-                if (toX == promotionRow)
-                    return true;
+        if (dy == 0 && snap.board[toX][toY].empty()) {
+            if (dx == dir) return true;
+            if (fromX == startRow && dx == 2 * dir &&
+                snap.board[fromX + dir][fromY].empty())
                 return true;
-            }
-            if (fromX == startRow && dx == 2 * direction &&
-                board[fromX + direction][fromY].empty())
-            {
+        }
+        if (std::abs(dy) == 1 && dx == dir) {
+            if (!snap.board[toX][toY].empty() &&
+                (isupper(snap.board[toX][toY][0]) != 0) != isWhitePiece)
                 return true;
-            }
-        }
-
-        if (abs(dy) == 1 && dx == direction && !board[toX][toY].empty())
-        {
-            bool targetIsWhite = isupper(board[toX][toY][0]);
-            if (targetIsWhite != isWhitePiece)
-            {
-                if (toX == promotionRow)
-                    return true;
+            if (snap.board[toX][toY].empty() &&
+                toX == snap.enPassantX && toY == snap.enPassantY)
                 return true;
-            }
         }
-
-        if (abs(dy) == 1 && dx == direction &&
-            board[toX][toY].empty() &&
-            toX == enPassantX && toY == enPassantY)
-        {
-            return true;
-        }
-
         return false;
     }
-
     case 'r':
         return (dx == 0 || dy == 0) && isPathClear(fromX, fromY, toX, toY);
     case 'b':
-        return abs(dx) == abs(dy) && isPathClear(fromX, fromY, toX, toY);
+        return std::abs(dx) == std::abs(dy) &&
+               isPathClear(fromX, fromY, toX, toY);
     case 'q':
-        return ((dx == 0 || dy == 0) || abs(dx) == abs(dy)) && isPathClear(fromX, fromY, toX, toY);
+        return ((dx == 0 || dy == 0) || std::abs(dx) == std::abs(dy)) &&
+               isPathClear(fromX, fromY, toX, toY);
     case 'n':
-        return (abs(dx) == 2 && abs(dy) == 1) || (abs(dx) == 1 && abs(dy) == 2);
+        return (std::abs(dx) == 2 && std::abs(dy) == 1) ||
+               (std::abs(dx) == 1 && std::abs(dy) == 2);
     case 'k':
-        return abs(dx) <= 1 && abs(dy) <= 1;
-
+        return std::abs(dx) <= 1 && std::abs(dy) <= 1;
     default:
         return false;
     }
 }
 
-bool ChessEngine::isPathClear(int fromX, int fromY, int toX, int toY) const
-{
-    int stepX = (toX - fromX) == 0 ? 0 : (toX - fromX) / abs(toX - fromX);
-    int stepY = (toY - fromY) == 0 ? 0 : (toY - fromY) / abs(toY - fromY);
-
-    int x = fromX + stepX;
-    int y = fromY + stepY;
-
-    while (x != toX || y != toY)
-    {
-        if (!board[x][y].empty())
-            return false;
-        x += stepX;
-        y += stepY;
-    }
-    return true;
-}
-
-bool ChessEngine::isCheckmate(bool isWhiteTurnPlayer) {
-    if (!isInCheck(isWhiteTurnPlayer))
-        return false;
-
-    for (int fromX = 0; fromX < 8; fromX++) {
-        for (int fromY = 0; fromY < 8; fromY++) {
-            std::string piece = board[fromX][fromY];
-            if (piece.empty()) continue;
-
-            bool isWhitePiece = isupper(piece[0]);
-            if (isWhitePiece != isWhiteTurnPlayer) continue;
-
-            for (int toX = 0; toX < 8; toX++) {
-                for (int toY = 0; toY < 8; toY++) {
-
-                    if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) continue;
-                    if (!board[toX][toY].empty() &&
-                        isupper(board[toX][toY][0]) == isWhitePiece)
-                        continue;
-                    auto originalBoard = board;
-                    bool originalWhiteTurn = whiteTurn;
-                    int savedEpX = enPassantX;
-                    int savedEpY = enPassantY;
-
-                    bool simEP = (tolower(piece[0]) == 'p' && abs(toY - fromY) == 1 &&
-                                  board[toX][toY].empty() &&
-                                  toX == enPassantX && toY == enPassantY);
-
-                    board[toX][toY] = piece;
-                    board[fromX][fromY] = "";
-                    if (simEP) {
-                        board[fromX][toY] = "";
-                    }
-
-                    if (tolower(piece[0]) == 'p') {
-                        int promoRow = isWhitePiece ? 0 : 7;
-                        if (toX == promoRow) {
-                            board[toX][toY] = isWhitePiece ? "Q" : "q";
-                        }
-                    }
-                    enPassantX = -1;
-                    enPassantY = -1;
-
-                    bool stillInCheck = isInCheck(isWhiteTurnPlayer);
-
-                    board = originalBoard;
-                    whiteTurn = originalWhiteTurn;
-                    enPassantX = savedEpX;
-                    enPassantY = savedEpY;
-
-                    if (!stillInCheck)
-                        return false;
-                }
-            }
+bool ChessEngine::isSquareAttacked(int x, int y, bool byWhite) const {
+    for (int i = 0; i < 8; i++)
+        for (int j = 0; j < 8; j++) {
+            const auto &cell = snap.board[i][j];
+            if (!cell.empty() && (isupper(cell[0]) != 0) == byWhite)
+                if (isValidPieceMove(cell, i, j, x, y))
+                    return true;
         }
-    }
-    return true;
+    return false;
 }
 
-std::string ChessEngine::getTurn() const
-{
-    return whiteTurn ? "white" : "black";
+bool ChessEngine::isInCheck(bool white) const {
+    char king = white ? 'K' : 'k';
+    for (int x = 0; x < 8; x++)
+        for (int y = 0; y < 8; y++)
+            if (snap.board[x][y] == std::string(1, king))
+                return isSquareAttacked(x, y, !white);
+    return false;
 }
 
-bool ChessEngine::canCastle(bool white, bool kingSide) const
-{
-    if (white && whiteKingMoved) return false;
-    if (!white && blackKingMoved) return false;
-
-    if (white  &&  kingSide && whiteRookHMoved) return false;
-    if (white  && !kingSide && whiteRookAMoved) return false;
-    if (!white &&  kingSide && blackRookHMoved) return false;
-    if (!white && !kingSide && blackRookAMoved) return false;
+bool ChessEngine::canCastle(bool white, bool kingSide) const {
+    if (white  &&  snap.whiteKingMoved)  return false;
+    if (!white &&  snap.blackKingMoved)  return false;
+    if (white  &&  kingSide && snap.whiteRookHMoved) return false;
+    if (white  && !kingSide && snap.whiteRookAMoved) return false;
+    if (!white &&  kingSide && snap.blackRookHMoved) return false;
+    if (!white && !kingSide && snap.blackRookAMoved) return false;
 
     int row = white ? 7 : 0;
+    std::string rook = white ? "R" : "r";
+    if (snap.board[row][kingSide ? 7 : 0] != rook) return false;
 
-    std::string expectedRook = white ? "R" : "r";
-    int rookCol = kingSide ? 7 : 0;
-    if (board[row][rookCol] != expectedRook) return false;
     if (kingSide) {
-        if (!board[row][5].empty() || !board[row][6].empty()) return false;
+        if (!snap.board[row][5].empty() || !snap.board[row][6].empty())
+            return false;
     } else {
-        if (!board[row][1].empty() || !board[row][2].empty() || !board[row][3].empty()) return false;
+        if (!snap.board[row][1].empty() ||
+            !snap.board[row][2].empty() ||
+            !snap.board[row][3].empty())
+            return false;
     }
 
-    bool byWhiteAttacker = !white;
-    int kingPassY1 = kingSide ? 5 : 3;
-    int kingDestY  = kingSide ? 6 : 2;
+    bool att = !white;
+    int  p1  = kingSide ? 5 : 3;
+    int  p2  = kingSide ? 6 : 2;
+    return !isSquareAttacked(row, 4, att) &&
+           !isSquareAttacked(row, p1, att) &&
+           !isSquareAttacked(row, p2, att);
+}
 
-    if (isSquareAttacked(row, 4,        byWhiteAttacker)) return false;
-    if (isSquareAttacked(row, kingPassY1, byWhiteAttacker)) return false;
-    if (isSquareAttacked(row, kingDestY,  byWhiteAttacker)) return false;
+bool ChessEngine::isCheckmate(bool white) {
+    if (!isInCheck(white)) return false;
 
+    MoveGenContext ctx{
+        snap.board, snap.whiteTurn,
+        snap.enPassantX, snap.enPassantY,
+        [this](bool w, bool ks) { return canCastle(w, ks); },
+        [this](const std::string &p, int fx, int fy, int tx, int ty) {
+            return isValidPieceMove(p, fx, fy, tx, ty);
+        },
+        [this](bool w) { return isInCheck(w); },
+    };
+
+    for (const auto &m : generateAllMoves(ctx, white)) {
+        BoardSnapshot saved = snap;
+        snap.board[m.toX][m.toY]     = snap.board[m.fromX][m.fromY];
+        snap.board[m.fromX][m.fromY] = "";
+        bool simEP = (tolower(snap.board[m.toX][m.toY][0]) == 'p' &&
+                      std::abs(m.toY - m.fromY) == 1 &&
+                      snap.board[m.toX][m.toY].empty() == false &&
+                      m.toX == saved.enPassantX && m.toY == saved.enPassantY);
+        if (simEP) snap.board[m.fromX][m.toY] = "";
+        snap.enPassantX = snap.enPassantY = -1;
+
+        bool still = isInCheck(white);
+        snap = saved;
+        if (!still) return false;
+    }
     return true;
 }
 
-std::vector<std::string> ChessEngine::getValidMoves(const std::string &square)
-{
-    std::vector<std::string> moves;
-    if (square.length() != 2) return moves;
+std::string ChessEngine::makeMove(const std::string &move) {
+    if (move.length() != 4 && move.length() != 5) return "invalid";
+
+    int fromX = 8 - (move[1] - '0'), fromY = move[0] - 'a';
+    int toX   = 8 - (move[3] - '0'), toY   = move[2] - 'a';
+
+    if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7 ||
+        toX   < 0 || toX   > 7 || toY   < 0 || toY   > 7)
+        return "invalid";
+
+    std::string piece = snap.board[fromX][fromY];
+    if (piece.empty()) return "invalid";
+
+    bool isWhitePiece = isupper(piece[0]) != 0;
+    if (snap.whiteTurn != isWhitePiece) return "invalid";
+
+    bool isPawn         = tolower(piece[0]) == 'p';
+    int  promoRow       = isWhitePiece ? 0 : 7;
+    bool reachesPromo   = isPawn && toX == promoRow;
+    char promotionPiece = 'q';
+
+    if (reachesPromo) {
+        if (move.length() != 5) return "invalid";
+        char raw = (char)tolower(move[4]);
+        if (raw != 'q' && raw != 'r' && raw != 'b' && raw != 'n') return "invalid";
+        promotionPiece = raw;
+    } else {
+        if (move.length() == 5) return "invalid";
+    }
+
+    bool isCastling = false, castleKS = false;
+    if (tolower(piece[0]) == 'k' && fromY == 4 &&
+        std::abs(toY - fromY) == 2 && fromX == toX) {
+        castleKS = (toY == 6);
+        if (!canCastle(isWhitePiece, castleKS)) return "invalid";
+        isCastling = true;
+    }
+
+    if (!isCastling) {
+        if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) return "invalid";
+        if (!snap.board[toX][toY].empty() &&
+            (isupper(snap.board[toX][toY][0]) != 0) == isWhitePiece)
+            return "invalid";
+    }
+
+    BoardSnapshot saved = snap;
+
+    bool isEP = isPawn && std::abs(toY - fromY) == 1 &&
+                snap.board[toX][toY].empty() &&
+                toX == snap.enPassantX && toY == snap.enPassantY;
+
+    if (isCastling) {
+        snap.board[toX][toY]   = piece;
+        snap.board[fromX][fromY] = "";
+        int rf = castleKS ? 7 : 0, rt = castleKS ? 5 : 3;
+        snap.board[toX][rt] = snap.board[toX][rf];
+        snap.board[toX][rf] = "";
+    } else {
+        snap.board[toX][toY]   = piece;
+        snap.board[fromX][fromY] = "";
+        if (isEP) snap.board[fromX][toY] = "";
+        if (reachesPromo) {
+            char pc = isWhitePiece ? (char)toupper(promotionPiece) : promotionPiece;
+            snap.board[toX][toY] = std::string(1, pc);
+        }
+    }
+
+    snap.enPassantX = snap.enPassantY = -1;
+    if (piece == "K") snap.whiteKingMoved  = true;
+    if (piece == "k") snap.blackKingMoved  = true;
+    if (fromX == 7 && fromY == 0) snap.whiteRookAMoved = true;
+    if (fromX == 7 && fromY == 7) snap.whiteRookHMoved = true;
+    if (fromX == 0 && fromY == 0) snap.blackRookAMoved = true;
+    if (fromX == 0 && fromY == 7) snap.blackRookHMoved = true;
+
+    if (isInCheck(isWhitePiece)) { snap = saved; return "false"; }
+
+    snap.whiteTurn = !snap.whiteTurn;
+
+    if (isInCheck(!isWhitePiece))
+        return isCheckmate(!isWhitePiece) ? "checkmate" : "check";
+
+    return "valid";
+}
+
+std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
+    std::vector<std::string> result;
+    if (square.length() != 2) return result;
 
     int fromY = square[0] - 'a';
     int fromX = 8 - (square[1] - '0');
-    if (fromX < 0 || fromX >= 8 || fromY < 0 || fromY >= 8) return moves;
+    if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7) return result;
 
-    std::string piece = board[fromX][fromY];
-    if (piece.empty()) return moves;
+    std::string piece = snap.board[fromX][fromY];
+    if (piece.empty()) return result;
+    if ((isupper(piece[0]) != 0) != snap.whiteTurn) return result;
 
-    bool isWhitePiece = isupper(piece[0]);
-    if (whiteTurn != isWhitePiece) return moves;
-
-    auto squareName = [](int x, int y) -> std::string {
-        return std::string(1, 'a' + y) + std::string(1, '0' + (8 - x));
+    MoveGenContext ctx{
+        snap.board, snap.whiteTurn,
+        snap.enPassantX, snap.enPassantY,
+        [this](bool w, bool ks) { return canCastle(w, ks); },
+        [this](const std::string &p, int fx, int fy, int tx, int ty) {
+            return isValidPieceMove(p, fx, fy, tx, ty);
+        },
+        [this](bool w) { return isInCheck(w); },
     };
 
-    for (int toX = 0; toX < 8; toX++) {
-        for (int toY = 0; toY < 8; toY++) {
-            if (toX == fromX && toY == fromY) continue;
+    bool isWhitePiece = isupper(piece[0]) != 0;
 
-            bool isCastling = false;
-            bool castleKingSide = false;
-            if (tolower(piece[0]) == 'k' && fromY == 4 && abs(toY - fromY) == 2 && fromX == toX) {
-                castleKingSide = (toY == 6);
-                if (canCastle(isWhitePiece, castleKingSide)) {
-                    isCastling = true;
-                } else {
-                    continue;
-                }
-            }
+    auto squareName = [](int x, int y) {
+        return std::string(1, (char)('a' + y)) +
+               std::string(1, (char)('0' + (8 - x)));
+    };
 
-            if (!isCastling) {
-                if (!isValidPieceMove(piece, fromX, fromY, toX, toY)) continue;
-                if (!board[toX][toY].empty() && isupper(board[toX][toY][0]) == isWhitePiece) continue;
-            }
+    for (const auto &m : generateAllMoves(ctx, isWhitePiece)) {
+        if (m.fromX != fromX || m.fromY != fromY) continue;
 
-            auto savedBoard = board;
-            int savedEpX = enPassantX;
-            int savedEpY = enPassantY;
+        BoardSnapshot saved = snap;
+        bool isCastling = (tolower(piece[0]) == 'k' &&
+                           std::abs(m.toY - m.fromY) == 2 &&
+                           m.fromX == m.toX);
+        bool simEP = (!isCastling && tolower(piece[0]) == 'p' &&
+                      std::abs(m.toY - m.fromY) == 1 &&
+                      snap.board[m.toX][m.toY].empty() &&
+                      m.toX == snap.enPassantX && m.toY == snap.enPassantY);
 
-            bool simEP = (tolower(piece[0]) == 'p' && abs(toY - fromY) == 1 &&
-                          board[toX][toY].empty() &&
-                          toX == enPassantX && toY == enPassantY);
-
-            if (isCastling) {
-                board[toX][toY] = piece;
-                board[fromX][fromY] = "";
-                int rookFromY = castleKingSide ? 7 : 0;
-                int rookToY   = castleKingSide ? 5 : 3;
-                board[toX][rookToY] = board[toX][rookFromY];
-                board[toX][rookFromY] = "";
-            } else {
-                board[toX][toY] = piece;
-                board[fromX][fromY] = "";
-                if (simEP) {
-                    board[fromX][toY] = "";
-                }
-                if (tolower(piece[0]) == 'p') {
-                    int promoRow = isWhitePiece ? 0 : 7;
-                    if (toX == promoRow) {
-                        board[toX][toY] = isWhitePiece ? "Q" : "q";
-                    }
-                }
-            }
-            enPassantX = -1;
-            enPassantY = -1;
-
-            bool inCheck = isInCheck(isWhitePiece);
-            board = savedBoard;
-            enPassantX = savedEpX;
-            enPassantY = savedEpY;
-
-            if (!inCheck) {
-                bool isPromoSquare = (tolower(piece[0]) == 'p') &&
-                                     (toX == (isWhitePiece ? 0 : 7));
-                std::string sq = squareName(toX, toY);
-                moves.push_back(isPromoSquare ? sq + "=" : sq);
+        if (isCastling) {
+            snap.board[m.toX][m.toY]   = piece;
+            snap.board[m.fromX][m.fromY] = "";
+            bool ks = (m.toY == 6);
+            int  rf = ks ? 7 : 0, rt = ks ? 5 : 3;
+            snap.board[m.toX][rt] = snap.board[m.toX][rf];
+            snap.board[m.toX][rf] = "";
+        } else {
+            snap.board[m.toX][m.toY]    = piece;
+            snap.board[m.fromX][m.fromY] = "";
+            if (simEP) snap.board[m.fromX][m.toY] = "";
+            if (tolower(piece[0]) == 'p') {
+                int pr = isWhitePiece ? 0 : 7;
+                if (m.toX == pr)
+                    snap.board[m.toX][m.toY] = isWhitePiece ? "Q" : "q";
             }
         }
-    }
-    return moves;
-}
+        snap.enPassantX = snap.enPassantY = -1;
 
-static const int PST_PAWN[8][8] = {
-    {  0,  0,  0,  0,  0,  0,  0,  0 },
-    { 50, 50, 50, 50, 50, 50, 50, 50 },
-    { 10, 10, 20, 30, 30, 20, 10, 10 },
-    {  5,  5, 10, 25, 25, 10,  5,  5 },
-    {  0,  0,  0, 20, 20,  0,  0,  0 },
-    {  5, -5,-10,  0,  0,-10, -5,  5 },
-    {  5, 10, 10,-20,-20, 10, 10,  5 },
-    {  0,  0,  0,  0,  0,  0,  0,  0 },
-};
+        bool inCheck = isInCheck(isWhitePiece);
+        snap = saved;
 
-static const int PST_KNIGHT[8][8] = {
-    {-50,-40,-30,-30,-30,-30,-40,-50 },
-    {-40,-20,  0,  0,  0,  0,-20,-40 },
-    {-30,  0, 10, 15, 15, 10,  0,-30 },
-    {-30,  5, 15, 20, 20, 15,  5,-30 },
-    {-30,  0, 15, 20, 20, 15,  0,-30 },
-    {-30,  5, 10, 15, 15, 10,  5,-30 },
-    {-40,-20,  0,  5,  5,  0,-20,-40 },
-    {-50,-40,-30,-30,-30,-30,-40,-50 },
-};
-
-static const int PST_BISHOP[8][8] = {
-    {-20,-10,-10,-10,-10,-10,-10,-20 },
-    {-10,  0,  0,  0,  0,  0,  0,-10 },
-    {-10,  0,  5, 10, 10,  5,  0,-10 },
-    {-10,  5,  5, 10, 10,  5,  5,-10 },
-    {-10,  0, 10, 10, 10, 10,  0,-10 },
-    {-10, 10, 10, 10, 10, 10, 10,-10 },
-    {-10,  5,  0,  0,  0,  0,  5,-10 },
-    {-20,-10,-10,-10,-10,-10,-10,-20 },
-};
-
-static const int PST_ROOK[8][8] = {
-    {  0,  0,  0,  0,  0,  0,  0,  0 },
-    {  5, 10, 10, 10, 10, 10, 10,  5 },
-    { -5,  0,  0,  0,  0,  0,  0, -5 },
-    { -5,  0,  0,  0,  0,  0,  0, -5 },
-    { -5,  0,  0,  0,  0,  0,  0, -5 },
-    { -5,  0,  0,  0,  0,  0,  0, -5 },
-    { -5,  0,  0,  0,  0,  0,  0, -5 },
-    {  0,  0,  0,  5,  5,  0,  0,  0 },
-};
-
-static const int PST_QUEEN[8][8] = {
-    {-20,-10,-10, -5, -5,-10,-10,-20 },
-    {-10,  0,  0,  0,  0,  0,  0,-10 },
-    {-10,  0,  5,  5,  5,  5,  0,-10 },
-    { -5,  0,  5,  5,  5,  5,  0, -5 },
-    {  0,  0,  5,  5,  5,  5,  0, -5 },
-    {-10,  5,  5,  5,  5,  5,  0,-10 },
-    {-10,  0,  5,  0,  0,  0,  0,-10 },
-    {-20,-10,-10, -5, -5,-10,-10,-20 },
-};
-
-static const int PST_KING_MG[8][8] = {
-    {-30,-40,-40,-50,-50,-40,-40,-30 },
-    {-30,-40,-40,-50,-50,-40,-40,-30 },
-    {-30,-40,-40,-50,-50,-40,-40,-30 },
-    {-30,-40,-40,-50,-50,-40,-40,-30 },
-    {-20,-30,-30,-40,-40,-30,-30,-20 },
-    {-10,-20,-20,-20,-20,-20,-20,-10 },
-    { 20, 20,  0,  0,  0,  0, 20, 20 },
-    { 20, 30, 10,  0,  0, 10, 30, 20 },
-};
-
-int ChessEngine::pieceValue(char p) const {
-    switch (p) {
-        case 'p': return 100;
-        case 'n': return 320;
-        case 'b': return 330;
-        case 'r': return 500;
-        case 'q': return 900;
-        case 'k': return 20000;
-        default:  return 0;
-    }
-}
-
-int ChessEngine::pieceSquareBonus(char p, bool isWhite, int x, int y) const {
-    int r = isWhite ? x : (7 - x);
-    int c = y;
-    switch (p) {
-        case 'p': return PST_PAWN[r][c];
-        case 'n': return PST_KNIGHT[r][c];
-        case 'b': return PST_BISHOP[r][c];
-        case 'r': return PST_ROOK[r][c];
-        case 'q': return PST_QUEEN[r][c];
-        case 'k': return PST_KING_MG[r][c];
-        default:  return 0;
-    }
-}
-
-int ChessEngine::evaluate() const {
-    int score = 0;
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            const std::string &cell = board[x][y];
-            if (cell.empty()) continue;
-            bool isWhite = isupper(cell[0]);
-            char p = tolower(cell[0]);
-            int val = pieceValue(p) + pieceSquareBonus(p, isWhite, x, y);
-            score += isWhite ? val : -val;
+        if (!inCheck) {
+            bool isPromoSq = (tolower(piece[0]) == 'p') &&
+                             (m.toX == (isWhitePiece ? 0 : 7));
+            std::string sq = squareName(m.toX, m.toY);
+            result.push_back(isPromoSq ? sq + "=" : sq);
         }
     }
-    return score;
-}
-
-std::vector<ChessEngine::Move> ChessEngine::generateAllMoves(bool white) const {
-    std::vector<Move> moves;
-    moves.reserve(64);
-
-    for (int fx = 0; fx < 8; fx++) {
-        for (int fy = 0; fy < 8; fy++) {
-            const std::string &cell = board[fx][fy];
-            if (cell.empty()) continue;
-            if ((bool)isupper(cell[0]) != white) continue;
-
-            char p = tolower(cell[0]);
-
-            for (int tx = 0; tx < 8; tx++) {
-                for (int ty = 0; ty < 8; ty++) {
-                    if (tx == fx && ty == fy) continue;
-
-                    if (p == 'k' && fy == 4 && abs(ty - fy) == 2 && tx == fx) {
-                        bool ks = (ty == 6);
-                        if (!canCastle(white, ks)) continue;
-                        moves.push_back({fx, fy, tx, ty, '\0'});
-                        continue;
-                    }
-
-                    if (!isValidPieceMove(cell, fx, fy, tx, ty)) continue;
-                    if (!board[tx][ty].empty() && (bool)isupper(board[tx][ty][0]) == white) continue;
-
-                    if (p == 'p') {
-                        int promoRow = white ? 0 : 7;
-                        if (tx == promoRow) {
-                            for (char pr : {'q', 'r', 'b', 'n'})
-                                moves.push_back({fx, fy, tx, ty, pr});
-                            continue;
-                        }
-                    }
-                    moves.push_back({fx, fy, tx, ty, '\0'});
-                }
-            }
-        }
-    }
-    return moves;
-}
-
-std::vector<ChessEngine::Move> ChessEngine::generateAllCaptureMoves(bool white) const {
-    if (isInCheck(white))
-        return generateAllMoves(white);
-
-    std::vector<Move> captures;
-    auto allMoves = generateAllMoves(white);
-    captures.reserve(allMoves.size());
-
-    for (const auto &m : allMoves) {
-        const std::string &piece = board[m.fromX][m.fromY];
-        bool isPawn = tolower(piece[0]) == 'p';
-        bool isEnPassant = isPawn && abs(m.toY - m.fromY) == 1 && board[m.toX][m.toY].empty() &&
-                           m.toX == enPassantX && m.toY == enPassantY;
-        if (!board[m.toX][m.toY].empty() || isEnPassant || m.promotion != '\0') {
-            captures.push_back(m);
-        }
-    }
-    return captures;
-}
-
-std::string ChessEngine::moveToUCI(const Move &m) const {
-    std::string s;
-    s += (char)('a' + m.fromY);
-    s += (char)('0' + (8 - m.fromX));
-    s += (char)('a' + m.toY);
-    s += (char)('0' + (8 - m.toX));
-    if (m.promotion != '\0') s += m.promotion;
-    return s;
-}
-
-bool ChessEngine::applyMove(const Move &m) {
-    std::string piece = board[m.fromX][m.fromY];
-    if (piece.empty()) return false;
-    bool isWhite = isupper(piece[0]);
-    char p = tolower(piece[0]);
-
-    bool isCastling = (p == 'k' && abs(m.toY - m.fromY) == 2 && m.fromX == m.toX);
-    bool isEP = (p == 'p' && abs(m.toY - m.fromY) == 1 &&
-                 board[m.toX][m.toY].empty() &&
-                 m.toX == enPassantX && m.toY == enPassantY);
-
-    if (isCastling) {
-        board[m.toX][m.toY] = piece;
-        board[m.fromX][m.fromY] = "";
-        bool ks = (m.toY == 6);
-        int rfrom = ks ? 7 : 0, rto = ks ? 5 : 3;
-        board[m.toX][rto] = board[m.toX][rfrom];
-        board[m.toX][rfrom] = "";
-    } else {
-        board[m.toX][m.toY] = piece;
-        board[m.fromX][m.fromY] = "";
-        if (isEP) board[m.fromX][m.toY] = "";
-        if (m.promotion != '\0') {
-            char pc = isWhite ? (char)toupper(m.promotion) : m.promotion;
-            board[m.toX][m.toY] = std::string(1, pc);
-        }
-    }
-
-    enPassantX = -1; enPassantY = -1;
-    if (p == 'p' && abs(m.toX - m.fromX) == 2) {
-        enPassantX = (m.fromX + m.toX) / 2;
-        enPassantY = m.fromY;
-    }
-
-    if (isInCheck(isWhite)) return false;
-    return true;
-}
-
-void ChessEngine::undoMove(const Move &,
-                           const std::vector<std::vector<std::string>> &savedBoard,
-                           bool savedWhiteTurn,
-                           bool savedWKM, bool savedBKM,
-                           bool savedWRAM, bool savedWRHM,
-                           bool savedBRAM, bool savedBRHM,
-                           int savedEpX, int savedEpY) {
-    board          = savedBoard;
-    whiteTurn      = savedWhiteTurn;
-    whiteKingMoved = savedWKM;
-    blackKingMoved = savedBKM;
-    whiteRookAMoved = savedWRAM;
-    whiteRookHMoved = savedWRHM;
-    blackRookAMoved = savedBRAM;
-    blackRookHMoved = savedBRHM;
-    enPassantX     = savedEpX;
-    enPassantY     = savedEpY;
-}
-
-int ChessEngine::quiescence(int alpha, int beta, bool maximizing) {
-    int standPat = evaluate();
-    if (maximizing) {
-        if (standPat >= beta) return beta;
-        if (alpha < standPat) alpha = standPat;
-    } else {
-        if (standPat <= alpha) return alpha;
-        if (beta > standPat) beta = standPat;
-    }
-
-    auto moves = generateAllCaptureMoves(maximizing);
-    if (moves.empty()) return standPat;
-
-    std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
-        int aValue = board[a.toX][a.toY].empty() ? 0 : pieceValue(tolower(board[a.toX][a.toY][0]));
-        int bValue = board[b.toX][b.toY].empty() ? 0 : pieceValue(tolower(board[b.toX][b.toY][0]));
-        if (a.promotion != '\0') aValue += 900;
-        if (b.promotion != '\0') bValue += 900;
-        return maximizing ? (aValue > bValue) : (aValue < bValue);
-    });
-
-    bool anyLegal = false;
-    if (maximizing) {
-        int best = std::numeric_limits<int>::min();
-        for (auto &m : moves) {
-            auto sb = board; bool swt = whiteTurn;
-            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
-            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
-            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
-            int sepx = enPassantX, sepy = enPassantY;
-
-            whiteTurn = maximizing;
-            bool legal = applyMove(m);
-            if (!legal) {
-                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-                continue;
-            }
-            anyLegal = true;
-            whiteTurn = !maximizing;
-
-            int score = quiescence(alpha, beta, false);
-            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-
-            best = std::max(best, score);
-            alpha = std::max(alpha, best);
-            if (beta <= alpha) break;
-        }
-        if (!anyLegal) {
-            return isInCheck(maximizing) ? std::numeric_limits<int>::min() + 1 : standPat;
-        }
-        return best;
-    } else {
-        int best = std::numeric_limits<int>::max();
-        for (auto &m : moves) {
-            auto sb = board; bool swt = whiteTurn;
-            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
-            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
-            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
-            int sepx = enPassantX, sepy = enPassantY;
-
-            whiteTurn = maximizing;
-            bool legal = applyMove(m);
-            if (!legal) {
-                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-                continue;
-            }
-            anyLegal = true;
-            whiteTurn = !maximizing;
-
-            int score = quiescence(alpha, beta, true);
-            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-
-            best = std::min(best, score);
-            beta = std::min(beta, best);
-            if (beta <= alpha) break;
-        }
-        if (!anyLegal) {
-            return isInCheck(maximizing) ? std::numeric_limits<int>::max() - 1 : standPat;
-        }
-        return best;
-    }
-}
-
-int ChessEngine::alphaBeta(int depth, int alpha, int beta, bool maximizing) {
-    if (depth == 0) return quiescence(alpha, beta, maximizing);
-
-    bool side = maximizing;
-    auto moves = generateAllMoves(side);
-
-     std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
-        bool aCapture = !board[a.toX][a.toY].empty();
-        bool bCapture = !board[b.toX][b.toY].empty();
-        return (int)aCapture > (int)bCapture;
-    });
-
-    bool anyLegal = false;
-
-    if (maximizing) {
-        int best = std::numeric_limits<int>::min();
-        for (auto &m : moves) {
-            auto sb = board; bool swt = whiteTurn;
-            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
-            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
-            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
-            int sepx = enPassantX, sepy = enPassantY;
-
-            whiteTurn = side;
-            bool legal = applyMove(m);
-            if (!legal) {
-                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-                continue;
-            }
-            anyLegal = true;
-            whiteTurn = !side;
-
-            int score = alphaBeta(depth - 1, alpha, beta, false);
-            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-
-            best = std::max(best, score);
-            alpha = std::max(alpha, best);
-            if (beta <= alpha) break;
-        }
-        if (!anyLegal) {
-
-            return isInCheck(side) ? std::numeric_limits<int>::min() + 1 : 0;
-        }
-        return best;
-    } else {
-        int best = std::numeric_limits<int>::max();
-        for (auto &m : moves) {
-            auto sb = board; bool swt = whiteTurn;
-            bool swkm = whiteKingMoved, sbkm = blackKingMoved;
-            bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
-            bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
-            int sepx = enPassantX, sepy = enPassantY;
-
-            whiteTurn = side;
-            bool legal = applyMove(m);
-            if (!legal) {
-                undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-                continue;
-            }
-            anyLegal = true;
-            whiteTurn = !side;
-
-            int score = alphaBeta(depth - 1, alpha, beta, true);
-            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-
-            best = std::min(best, score);
-            beta = std::min(beta, best);
-            if (beta <= alpha) break; // α cut-off
-        }
-        if (!anyLegal) {
-            return isInCheck(side) ? std::numeric_limits<int>::max() - 1 : 0;
-        }
-        return best;
-    }
+    return result;
 }
 
 std::string ChessEngine::getBestMove(bool white, int depth) {
-    auto moves = generateAllMoves(white);
-    if (moves.empty()) return "";
-
-    std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
-        bool aCapture = !board[a.toX][a.toY].empty();
-        bool bCapture = !board[b.toX][b.toY].empty();
-        return (int)aCapture > (int)bCapture;
-    });
-
-    std::string bestUCI;
-    int bestScore = white ? std::numeric_limits<int>::min()
-                          : std::numeric_limits<int>::max();
-
-    int alpha = std::numeric_limits<int>::min();
-    int beta  = std::numeric_limits<int>::max();
-
-    for (auto &m : moves) {
-        auto sb = board; bool swt = whiteTurn;
-        bool swkm = whiteKingMoved, sbkm = blackKingMoved;
-        bool swram = whiteRookAMoved, swrhm = whiteRookHMoved;
-        bool sbram = blackRookAMoved, sbrhm = blackRookHMoved;
-        int sepx = enPassantX, sepy = enPassantY;
-
-        whiteTurn = white;
-        bool legal = applyMove(m);
-        if (!legal) {
-            undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-            continue;
-        }
-        whiteTurn = !white;
-
-        int score = alphaBeta(depth - 1, alpha, beta, !white);
-        undoMove(m, sb, swt, swkm, sbkm, swram, swrhm, sbram, sbrhm, sepx, sepy);
-
-        if (white ? (score > bestScore) : (score < bestScore)) {
-            bestScore = score;
-            bestUCI   = moveToUCI(m);
-            if (white) alpha = std::max(alpha, bestScore);
-            else       beta  = std::min(beta,  bestScore);
-        }
-    }
-    return bestUCI;
+    Searcher searcher(
+        snap,
+        [this](bool w)                            { return isInCheck(w); },
+        [this](const std::string &p, int fx, int fy, int tx, int ty) {
+            return isValidPieceMove(p, fx, fy, tx, ty);
+        },
+        [this](bool w, bool ks)                   { return canCastle(w, ks); }
+    );
+    return searcher.getBestMove(white, depth);
 }

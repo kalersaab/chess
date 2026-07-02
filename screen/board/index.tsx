@@ -19,14 +19,41 @@ import Clock from '../clock';
 import { BoardProps } from '../../interface';
 
 const { width } = Dimensions.get('window');
+const CELL_SIZE = width / 8;
 
 const COMPUTER_DEPTH = 4;
+
+const squareToStyle = (sq: string) => {
+  const x = sq.charCodeAt(0) - 97;
+  const y = 8 - parseInt(sq[1], 10);
+  return { left: x * CELL_SIZE, top: y * CELL_SIZE };
+};
+
+interface AiHighlightProps {
+  lastAiMove: { from: string; to: string } | null;
+}
+const AiMoveHighlight = ({ lastAiMove }: AiHighlightProps) => {
+  if (!lastAiMove) return null;
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        style={[styles.aiHighlight, squareToStyle(lastAiMove.from)]}
+      />
+      <View
+        pointerEvents="none"
+        style={[styles.aiHighlight, squareToStyle(lastAiMove.to)]}
+      />
+    </>
+  );
+};
 
 function BoardInner({ gameMode, onBack }: BoardProps) {
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
   const [turn, setTurn]   = useState<PIECE_COLOR>(() => NativeChessModule.getTurn() as PIECE_COLOR);
   const [timerTick, setTimerTick] = useState(0);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
+  const [lastAiMove, setLastAiMove] = useState<{ from: string; to: string } | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -42,6 +69,10 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
+    // Don't tick while the AI is computing — its thinking time shouldn't
+    // count against black's clock.
+    if (isComputerThinking) return;
+
     intervalRef.current = setInterval(() => {
       const activeWhite = turn === PIECE_COLOR.white;
       const stillHasTime = NativeChessModule.tick(activeWhite);
@@ -54,7 +85,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     }, 1000);
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [turn]);
+  }, [turn, isComputerThinking]);
 
   useEffect(() => {
     if (gameMode !== 'computer') return;
@@ -67,6 +98,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
       const bestMove = NativeChessModule.getBestMove(false, COMPUTER_DEPTH);
       if (bestMove) {
         const result = await NativeChessModule.makeMove(bestMove);
+        setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
         if (result === CHECK_STATUS.checkmate) {
           refreshBoard();
           Alert.alert('Checkmate', 'Computer wins!');
@@ -111,6 +143,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const resetGame = useCallback(() => {
     NativeChessModule.reset();
     setIsComputerThinking(false);
+    setLastAiMove(null);
     refreshBoard();
   }, [refreshBoard]);
 
@@ -147,6 +180,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
 
       <View style={styles.boardContainer}>
         <Background />
+        <AiMoveHighlight lastAiMove={lastAiMove} />
         <MoveHighlights
           onSquareTap={handleSquareTap}
           currentTurn={humanTurn ? turn : (null as any)}
@@ -276,5 +310,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     borderRadius: 5,
     alignItems: 'center',
+  },
+  aiHighlight: {
+    position: 'absolute',
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    backgroundColor: 'rgba(255, 210, 0, 0.35)',
+    zIndex: 10,
   },
 });

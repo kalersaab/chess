@@ -104,13 +104,13 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
-    }
+        }
      externalNativeBuild {
        cmake {
            path "src/main/jni/CMakeLists.txt"
        }
     }
-}
+    }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

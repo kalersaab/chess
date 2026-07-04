@@ -11,7 +11,7 @@ export interface Spec extends TurboModule {
   getBlackTime(): number;
   tick(white: boolean): boolean;
   getValidMoves(square: string): string[];
-  getBestMove(white: boolean, depth: number): string;
+  getBestMove(white: boolean, depth: number): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

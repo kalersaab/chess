@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Text,
+  InteractionManager,
 } from 'react-native';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Background from '../Background';
@@ -94,22 +95,26 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
 
     setIsComputerThinking(true);
 
-    const timeout = setTimeout(async () => {
-      const bestMove = NativeChessModule.getBestMove(false, COMPUTER_DEPTH);
-      if (bestMove) {
-        const result = await NativeChessModule.makeMove(bestMove);
-        setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
-        if (result === CHECK_STATUS.checkmate) {
-          refreshBoard();
-          Alert.alert('Checkmate', 'Computer wins!');
-        } else {
-          refreshBoard();
+    const task = InteractionManager.runAfterInteractions(async () => {
+      try {
+        const bestMove = await NativeChessModule.getBestMove(false, COMPUTER_DEPTH);
+        if (bestMove) {
+          const result = await NativeChessModule.makeMove(bestMove);
+          setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
+          if (result === CHECK_STATUS.checkmate) {
+            refreshBoard();
+            Alert.alert('Checkmate', 'Computer wins!');
+          } else {
+            refreshBoard();
+          }
         }
+      } catch (e) {
+        // search failed — just hand turn back
       }
       setIsComputerThinking(false);
-    }, 50);
+    });
 
-    return () => clearTimeout(timeout);
+    return () => task.cancel();
   }, [turn, gameMode, isComputerThinking, refreshBoard]);
 
   const finishPromotion = useCallback(async (piece: string) => {

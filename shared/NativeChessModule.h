@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ChessSpecsJSI.h>
+#include <ReactCommon/TurboModule.h>
+#include <react/bridging/Bridging.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -19,12 +21,12 @@ namespace facebook::react
     int getWhiteTime(jsi::Runtime &rt);
     int getBlackTime(jsi::Runtime &rt);
     bool tick(jsi::Runtime &rt, bool white);
-    std::string makeMove(jsi::Runtime &rt, std::string move);
+    jsi::Value makeMove(jsi::Runtime &rt, std::string move);
+    jsi::Value isCheckmate(jsi::Runtime &rt, bool white);
     std::string getTurn(jsi::Runtime &rt);
     jsi::Array getBoard(jsi::Runtime &rt);
-    bool isCheckmate(jsi::Runtime &rt, bool white);
     jsi::Array getValidMoves(jsi::Runtime &rt, std::string square);
-    std::string getBestMove(jsi::Runtime &rt, bool white, int depth);
+    jsi::Value getBestMove(jsi::Runtime &rt, bool white, int depth);
 
   private:
     std::unique_ptr<ChessEngine> engine;

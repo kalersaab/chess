@@ -79,14 +79,11 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
 
   const executeMove = async (fromSq: string, toSq: string, toX: number, toY: number) => {
     clearSelection();
-
     const move = `${fromSq}${toSq}`;
-
     if (promotionSquares.has(toSq)) {
       setPromotion({ visible: true, move, newX: toX, newY: toY });
       return;
     }
-
     const result = await NativeChessModule.makeMove(move);
     if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
       translateX.value = withTiming(toX * SIZE, { duration: 200 });
@@ -130,12 +127,10 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
   const handleDragEnd = async (move: string, newX: number, newY: number) => {
     const toSq = move.slice(2, 4);
     clearSelection();
-
     if (promotionSquares.has(toSq)) {
       setPromotion({ visible: true, move, newX, newY });
       return;
     }
-
     const result = await NativeChessModule.makeMove(move);
     if (result === 'valid' || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
       translateX.value = withTiming(newX * SIZE);

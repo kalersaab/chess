@@ -10,6 +10,7 @@ include(${REACT_ANDROID_DIR}/cmake-utils/ReactNative-application.cmake)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE 
 ../../../../../shared/NativeChessModule.cpp
 ../../../../../shared/chess/ChessEngine.cpp
+../../../../../shared/chess/Attacks.cpp
 ../../../../../shared/chess/Evaluation.cpp
 ../../../../../shared/chess/MoveGen.cpp
 ../../../../../shared/chess/Search.cpp

@@ -24,6 +24,6 @@ private:
     void undoMove(const BoardSnapshot &saved);
     void orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int ply) const;
     void storeKiller(int ply, const Move &m);
-    int  quiescence(int alpha, int beta, bool maximizing);
-    int  alphaBeta(int depth, int ply, int alpha, int beta, bool maximizing);
+    int  quiescence(int alpha, int beta);
+    int  alphaBeta(int depth, int ply, int alpha, int beta);
 };

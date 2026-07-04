@@ -1,5 +1,6 @@
 #include "ChessEngine.h"
 #include "MoveGen.h"
+#include "Perft.h"
 #include "Search.h"
 #include <algorithm>
 #include <cctype>
@@ -29,6 +30,7 @@ void ChessEngine::reset() {
     snap.enPassantX      = snap.enPassantY      = -1;
     snap.syncFromString();
     resetTimer();
+    perftSuite(snap);
 }
 
 void ChessEngine::resetTimer() {

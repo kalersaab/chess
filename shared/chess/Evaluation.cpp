@@ -101,7 +101,7 @@ int evaluate(const BoardSnapshot &snap) {
         int val = pieceValueFast(p) + *pstFor(p, sqRow(i), sqCol(i));
         score  += pieceIsWhite(p) ? val : -val;
     }
-    return score;
+    return snap.whiteTurn ? score : -score;
 }
 
 int evaluate(const std::vector<std::vector<std::string>> &board) {

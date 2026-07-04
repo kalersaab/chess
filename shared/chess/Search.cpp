@@ -62,6 +62,7 @@ bool Searcher::applyMove(const Move &m) {
         state.enPassantY = m.fromY;
     }
 
+    state.whiteTurn = !state.whiteTurn;
     state.syncOccupancy();
     if (isInCheck(state, isW)) return false;
     return true;
@@ -93,7 +94,7 @@ void Searcher::orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int pl
         if (pieceType(attacker) == 1 &&
             std::abs(m.toY - m.fromY) == 1 &&
             m.toX == state.enPassantX && m.toY == state.enPassantY)
-            return 900000 + 100 * 10 - 100;
+            return 900000;
         if (m.promotion != '\0')
             return 850000 + pieceValue(m.promotion);
         if (ply < MAX_PLY) {
@@ -108,58 +109,36 @@ void Searcher::orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int pl
               [&](const Move &a, const Move &b){ return score(a) > score(b); });
 }
 
-int Searcher::quiescence(int alpha, int beta, bool maximizing) {
+int Searcher::quiescence(int alpha, int beta) {
     int standPat = evaluate(state);
-    if (maximizing) {
-        if (standPat >= beta)  return beta;
-        if (standPat > alpha)  alpha = standPat;
-    } else {
-        if (standPat <= alpha) return alpha;
-        if (standPat < beta)   beta  = standPat;
-    }
-    auto moves = generateCaptureMoves(state, maximizing);
-    if (moves.empty()) return standPat;
+    if (standPat >= beta)  return beta;
+    if (standPat > alpha)  alpha = standPat;
+
+    auto moves = generateCaptureMoves(state, state.whiteTurn);
     std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
         static const int vals[7] = {0,100,320,330,500,900,20000};
-        int va = state.sq[sq(a.toX,a.toY)] != EMPTY ? vals[pieceType(state.sq[sq(a.toX,a.toY)])] : 100;
-        int vb = state.sq[sq(b.toX,b.toY)] != EMPTY ? vals[pieceType(state.sq[sq(b.toX,b.toY)])] : 100;
-        return va > vb;
+        uint8_t va = state.sq[sq(a.toX, a.toY)];
+        uint8_t vb = state.sq[sq(b.toX, b.toY)];
+        return vals[pieceType(va != EMPTY ? va : (uint8_t)1)] >
+               vals[pieceType(vb != EMPTY ? vb : (uint8_t)1)];
     });
-    if (maximizing) {
-        int best = -INF;
-        for (const auto &m : moves) {
-            BoardSnapshot saved = state;
-            state.whiteTurn = true;
-            if (!applyMove(m)) { undoMove(saved); continue; }
-            state.whiteTurn = false;
-            int score = quiescence(alpha, beta, false);
-            undoMove(saved);
-            if (score > best) best = score;
-            if (best > alpha) alpha = best;
-            if (alpha >= beta) break;
-        }
-        return (best == -INF) ? standPat : best;
-    } else {
-        int best = INF;
-        for (const auto &m : moves) {
-            BoardSnapshot saved = state;
-            state.whiteTurn = false;
-            if (!applyMove(m)) { undoMove(saved); continue; }
-            state.whiteTurn = true;
-            int score = quiescence(alpha, beta, true);
-            undoMove(saved);
-            if (score < best) best = score;
-            if (best < beta)  beta  = best;
-            if (alpha >= beta) break;
-        }
-        return (best == INF) ? standPat : best;
+
+    for (const auto &m : moves) {
+        BoardSnapshot saved = state;
+        if (!applyMove(m)) { undoMove(saved); continue; }
+        int score = -quiescence(-beta, -alpha);
+        undoMove(saved);
+        if (score >= beta) return beta;
+        if (score > alpha) alpha = score;
     }
+    return alpha;
 }
 
-int Searcher::alphaBeta(int depth, int ply, int alpha, int beta, bool maximizing) {
-    int      origAlpha = alpha;
-    uint64_t hash      = computeZobrist(state);
-    Move     ttBest    = Move::null();
+int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
+    int origAlpha = alpha;
+
+    uint64_t hash   = computeZobrist(state);
+    Move     ttBest = Move::null();
 
     const TTEntry *entry = tt.probe(hash);
     if (entry && entry->depth >= depth) {
@@ -175,65 +154,48 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta, bool maximizing
         ttBest = entry->best;
     }
 
-    if (depth == 0) return quiescence(alpha, beta, maximizing);
+    if (depth == 0) return quiescence(alpha, beta);
 
-    auto moves = generateAllMoves(state, maximizing);
+    auto moves = generateAllMoves(state, state.whiteTurn);
     orderMovesEx(moves, ttBest, ply);
 
     bool anyLegal = false;
-    int  best     = maximizing ? -INF : INF;
+    int  best     = -INF;
     Move bestMove = Move::null();
     int  moveIdx  = 0;
 
     for (const auto &m : moves) {
         BoardSnapshot saved = state;
-        state.whiteTurn = maximizing;
         if (!applyMove(m)) { undoMove(saved); continue; }
-        anyLegal        = true;
-        state.whiteTurn = !maximizing;
+        anyLegal = true;
 
         int score;
         if (moveIdx == 0) {
-            score = alphaBeta(depth-1, ply+1, alpha, beta, !maximizing);
+            score = -alphaBeta(depth-1, ply+1, -beta, -alpha);
         } else {
-            if (maximizing) {
-                score = alphaBeta(depth-1, ply+1, alpha, alpha+1, false);
-                if (score > alpha && score < beta)
-                    score = alphaBeta(depth-1, ply+1, alpha, beta, false);
-            } else {
-                score = alphaBeta(depth-1, ply+1, beta-1, beta, true);
-                if (score < beta && score > alpha)
-                    score = alphaBeta(depth-1, ply+1, alpha, beta, true);
-            }
+            score = -alphaBeta(depth-1, ply+1, -alpha-1, -alpha);
+            if (score > alpha && score < beta)
+                score = -alphaBeta(depth-1, ply+1, -beta, -alpha);
         }
 
         undoMove(saved);
         ++moveIdx;
 
-        if (maximizing) {
-            if (score > best) { best = score; bestMove = m; }
-            if (best > alpha)   alpha = best;
-        } else {
-            if (score < best) { best = score; bestMove = m; }
-            if (best < beta)    beta  = best;
-        }
+        if (score > best) { best = score; bestMove = m; }
+        if (best > alpha)   alpha = best;
 
         if (alpha >= beta) {
             storeKiller(ply, m);
-            if (state.sq[sq(m.toX,m.toY)] == EMPTY && m.promotion == '\0') {
-                int si   = maximizing ? 0 : 1;
-                int from = m.fromX * 8 + m.fromY;
-                int to   = m.toX   * 8 + m.toY;
-                history[si][from][to] += depth * depth;
+            if (state.sq[sq(m.toX, m.toY)] == EMPTY && m.promotion == '\0') {
+                int side = saved.whiteTurn ? 0 : 1;
+                history[side][m.fromX*8+m.fromY][m.toX*8+m.toY] += depth * depth;
             }
             break;
         }
     }
 
     if (!anyLegal)
-        return isInCheck(state, maximizing)
-                   ? (maximizing ? -INF + ply : INF - ply)
-                   : 0;
+        return isInCheck(state, state.whiteTurn) ? -INF + ply : 0;
 
     TTFlag flag;
     if      (best <= origAlpha) flag = TTFlag::UPPER;
@@ -257,48 +219,38 @@ std::string Searcher::getBestMove(bool white, int maxDepth) {
 
         orderMovesEx(moves, bestMove, 0);
 
-        int  iterBest  = white ? -INF : INF;
+        int  iterBest  = -INF;
         Move iterBestM = Move::null();
         int  alpha = -INF, beta = INF;
         int  moveIdx = 0;
 
         for (const auto &m : moves) {
             BoardSnapshot saved = state;
-            state.whiteTurn = white;
             if (!applyMove(m)) { undoMove(saved); continue; }
-            state.whiteTurn = !white;
 
             int score;
             if (moveIdx == 0) {
-                score = alphaBeta(depth-1, 1, alpha, beta, !white);
+                score = -alphaBeta(depth-1, 1, -beta, -alpha);
             } else {
-                if (white) {
-                    score = alphaBeta(depth-1, 1, alpha, alpha+1, false);
-                    if (score > alpha && score < beta)
-                        score = alphaBeta(depth-1, 1, alpha, beta, false);
-                } else {
-                    score = alphaBeta(depth-1, 1, beta-1, beta, true);
-                    if (score < beta && score > alpha)
-                        score = alphaBeta(depth-1, 1, alpha, beta, true);
-                }
+                score = -alphaBeta(depth-1, 1, -alpha-1, -alpha);
+                if (score > alpha && score < beta)
+                    score = -alphaBeta(depth-1, 1, -beta, -alpha);
             }
 
             undoMove(saved);
             ++moveIdx;
 
-            if (white ? (score > iterBest) : (score < iterBest)) {
+            if (score > iterBest) {
                 iterBest  = score;
                 iterBestM = m;
-                if (white) alpha = std::max(alpha, iterBest);
-                else        beta  = std::min(beta,  iterBest);
+                if (score > alpha) alpha = score;
             }
         }
 
         if (!iterBestM.isNull()) {
             bestMove = iterBestM;
             bestUCI  = moveToUCI(bestMove);
-            uint64_t h = computeZobrist(state);
-            tt.store(h, iterBest, depth, TTFlag::EXACT, bestMove);
+            tt.store(computeZobrist(state), iterBest, depth, TTFlag::EXACT, bestMove);
         }
     }
     return bestUCI;

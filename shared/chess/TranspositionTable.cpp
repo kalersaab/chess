@@ -29,7 +29,7 @@ uint64_t computeZobrist(const BoardSnapshot &snap) {
     const auto &z = zobristKeys();
     uint64_t h = 0;
     for (int i = 0; i < 64; i++) {
-        uint8_t p = snap.sq[i];
+        uint8_t p = snap.bd[i];
         if (p == EMPTY) continue;
         int idx = pieceIsWhite(p) ? pieceType(p) - 1 : pieceType(p) - 1 + 6;
         h ^= z.piece[idx][sqRow(i)][sqCol(i)];

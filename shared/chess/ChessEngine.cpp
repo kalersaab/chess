@@ -5,14 +5,43 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <thread>
+#include <atomic>
+#include <mutex>
+
+static std::atomic<bool> perftDone{false};
+static std::mutex engineMutex;
 
 ChessEngine::ChessEngine() {
     whiteSeconds = DEFAULT_TIME;
     blackSeconds = DEFAULT_TIME;
     reset();
+
+    std::thread([]() {
+        BoardSnapshot tmp;
+        tmp.board = {
+            {"r","n","b","q","k","b","n","r"},
+            {"p","p","p","p","p","p","p","p"},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"","","","","","","",""},
+            {"P","P","P","P","P","P","P","P"},
+            {"R","N","B","Q","K","B","N","R"},
+        };
+        tmp.whiteTurn       = true;
+        tmp.whiteKingMoved  = tmp.blackKingMoved  = false;
+        tmp.whiteRookAMoved = tmp.whiteRookHMoved = false;
+        tmp.blackRookAMoved = tmp.blackRookHMoved = false;
+        tmp.enPassantX      = tmp.enPassantY      = -1;
+        tmp.syncFromString();
+        perftSuite(tmp);
+        perftDone = true;
+    }).detach();
 }
 
 void ChessEngine::reset() {
+    std::lock_guard<std::mutex> lock(engineMutex);
     snap.board = {
         {"r","n","b","q","k","b","n","r"},
         {"p","p","p","p","p","p","p","p"},
@@ -30,7 +59,6 @@ void ChessEngine::reset() {
     snap.enPassantX      = snap.enPassantY      = -1;
     snap.syncFromString();
     resetTimer();
-    perftSuite(snap);
 }
 
 void ChessEngine::resetTimer() {
@@ -55,7 +83,7 @@ bool ChessEngine::isCheckmate(bool white) {
     if (!isInCheck(white)) return false;
     for (const auto &m : generateAllMoves(snap, white)) {
         BoardSnapshot saved = snap;
-        uint8_t *s    = snap.sq;
+        uint8_t *s    = snap.bd;
         uint8_t piece = s[sq(m.fromX, m.fromY)];
         bool    isW   = pieceIsWhite(piece);
         uint8_t tp    = pieceType(piece);
@@ -103,7 +131,7 @@ std::string ChessEngine::makeMove(const std::string &move) {
         toX   < 0 || toX   > 7 || toY   < 0 || toY   > 7)
         return "invalid";
 
-    uint8_t piece = snap.sq[sq(fromX, fromY)];
+    uint8_t piece = snap.bd[sq(fromX, fromY)];
     if (piece == EMPTY) return "invalid";
 
     bool isW = pieceIsWhite(piece);
@@ -136,7 +164,7 @@ std::string ChessEngine::makeMove(const std::string &move) {
     if (!found) return "invalid";
 
     BoardSnapshot saved = snap;
-    uint8_t *s    = snap.sq;
+    uint8_t *s    = snap.bd;
     bool isCastle = (tp == 6 && std::abs(toY - fromY) == 2 && fromX == toX);
     bool isEP     = (isPawn && std::abs(toY - fromY) == 1 &&
                      s[sq(toX, toY)] == EMPTY &&
@@ -197,7 +225,7 @@ std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
     int fromX = 8 - (square[1] - '0');
     if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7) return result;
 
-    uint8_t piece = snap.sq[sq(fromX, fromY)];
+    uint8_t piece = snap.bd[sq(fromX, fromY)];
     if (piece == EMPTY) return result;
     bool isW = pieceIsWhite(piece);
     if (snap.whiteTurn != isW) return result;
@@ -210,7 +238,7 @@ std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
         if (m.fromX != fromX || m.fromY != fromY) continue;
 
         BoardSnapshot saved = snap;
-        uint8_t *s    = snap.sq;
+        uint8_t *s    = snap.bd;
         uint8_t  tp   = pieceType(piece);
         bool isCastle = (tp == 6 && std::abs(m.toY - m.fromY) == 2);
         bool isEP     = (tp == 1 && std::abs(m.toY - m.fromY) == 1 &&
@@ -248,6 +276,7 @@ std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
 }
 
 std::string ChessEngine::getBestMove(bool white, int depth) {
+    std::lock_guard<std::mutex> lock(engineMutex);
     Searcher searcher(snap);
     return searcher.getBestMove(white, depth);
 }

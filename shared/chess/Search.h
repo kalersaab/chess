@@ -20,8 +20,8 @@ private:
     std::array<std::array<Move, KILLERS_PER_PLY>, MAX_PLY> killers;
     int history[2][64][64];
 
-    bool applyMove(const Move &m);
-    void undoMove(const BoardSnapshot &saved);
+    bool applyMove(const Move &m, UndoRecord &undo);
+    void undoMove(const UndoRecord &undo);
     void orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int ply) const;
     void storeKiller(int ply, const Move &m);
     int  quiescence(int alpha, int beta);

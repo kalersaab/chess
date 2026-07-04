@@ -13,9 +13,9 @@ Searcher::Searcher(BoardSnapshot &state)
     std::memset(history, 0, sizeof(history));
 }
 
-bool Searcher::applyMove(const Move &m) {
-    uint8_t *board = state.sq;
-    uint8_t  piece = board[sq(m.fromX, m.fromY)];
+bool Searcher::applyMove(const Move &m, UndoRecord &undo) {
+    uint8_t *bd    = state.bd;
+    uint8_t  piece = bd[sq(m.fromX, m.fromY)];
     if (piece == EMPTY) return false;
 
     bool    isW = pieceIsWhite(piece);
@@ -23,20 +23,50 @@ bool Searcher::applyMove(const Move &m) {
 
     bool isCastle = (tp == 6 && std::abs(m.toY - m.fromY) == 2 && m.fromX == m.toX);
     bool isEP     = (tp == 1 && std::abs(m.toY - m.fromY) == 1 &&
-                     board[sq(m.toX, m.toY)] == EMPTY &&
+                     bd[sq(m.toX, m.toY)] == EMPTY &&
                      m.toX == state.enPassantX && m.toY == state.enPassantY);
 
+    undo.whiteTurn      = state.whiteTurn;
+    undo.whiteKingMoved = state.whiteKingMoved;
+    undo.blackKingMoved = state.blackKingMoved;
+    undo.whiteRookAMoved = state.whiteRookAMoved;
+    undo.whiteRookHMoved = state.whiteRookHMoved;
+    undo.blackRookAMoved = state.blackRookAMoved;
+    undo.blackRookHMoved = state.blackRookHMoved;
+    undo.enPassantX     = state.enPassantX;
+    undo.enPassantY     = state.enPassantY;
+    undo.occ            = state.occ;
+    undo.deltaCount     = 0;
+
+    auto recordDelta = [&](uint8_t idx) {
+        undo.deltas[undo.deltaCount++] = {idx, bd[idx]};
+    };
+
     if (isCastle) {
-        board[sq(m.toX, m.toY)]    = piece;
-        board[sq(m.fromX, m.fromY)] = EMPTY;
         bool ks = (m.toY == 6);
         int rf = ks ? 7 : 0, rt = ks ? 5 : 3;
-        board[sq(m.toX, rt)] = board[sq(m.toX, rf)];
-        board[sq(m.toX, rf)] = EMPTY;
+        uint8_t fromSq = sq(m.fromX, m.fromY);
+        uint8_t toSq   = sq(m.toX,   m.toY);
+        uint8_t rfSq   = sq(m.toX,   rf);
+        uint8_t rtSq   = sq(m.toX,   rt);
+        recordDelta(fromSq); recordDelta(toSq);
+        recordDelta(rfSq);   recordDelta(rtSq);
+        bd[toSq]   = piece;
+        bd[fromSq] = EMPTY;
+        bd[rtSq]   = bd[rfSq];
+        bd[rfSq]   = EMPTY;
     } else {
-        board[sq(m.toX, m.toY)]    = piece;
-        board[sq(m.fromX, m.fromY)] = EMPTY;
-        if (isEP) board[sq(m.fromX, m.toY)] = EMPTY;
+        uint8_t fromSq = sq(m.fromX, m.fromY);
+        uint8_t toSq   = sq(m.toX,   m.toY);
+        recordDelta(fromSq);
+        recordDelta(toSq);
+        if (isEP) {
+            uint8_t epSq = sq(m.fromX, m.toY);
+            recordDelta(epSq);
+            bd[epSq] = EMPTY;
+        }
+        bd[toSq]   = piece;
+        bd[fromSq] = EMPTY;
         if (m.promotion != '\0') {
             uint8_t pp;
             switch (m.promotion) {
@@ -45,7 +75,7 @@ bool Searcher::applyMove(const Move &m) {
                 case 'b': pp = isW ? W_BISHOP : B_BISHOP; break;
                 default:  pp = isW ? W_KNIGHT : B_KNIGHT; break;
             }
-            board[sq(m.toX, m.toY)] = pp;
+            bd[toSq] = pp;
         }
     }
 
@@ -64,17 +94,33 @@ bool Searcher::applyMove(const Move &m) {
 
     state.whiteTurn = !state.whiteTurn;
     state.syncOccupancy();
-    if (isInCheck(state, isW)) return false;
+
+    if (isInCheck(state, isW)) {
+        undoMove(undo);
+        return false;
+    }
     return true;
 }
 
-void Searcher::undoMove(const BoardSnapshot &saved) {
-    state = saved;
+void Searcher::undoMove(const UndoRecord &undo) {
+    for (int i = undo.deltaCount - 1; i >= 0; i--)
+        state.bd[undo.deltas[i].idx] = undo.deltas[i].before;
+
+    state.whiteTurn      = undo.whiteTurn;
+    state.whiteKingMoved = undo.whiteKingMoved;
+    state.blackKingMoved = undo.blackKingMoved;
+    state.whiteRookAMoved = undo.whiteRookAMoved;
+    state.whiteRookHMoved = undo.whiteRookHMoved;
+    state.blackRookAMoved = undo.blackRookAMoved;
+    state.blackRookHMoved = undo.blackRookHMoved;
+    state.enPassantX     = undo.enPassantX;
+    state.enPassantY     = undo.enPassantY;
+    state.occ            = undo.occ;
 }
 
 void Searcher::storeKiller(int ply, const Move &m) {
     if (ply >= MAX_PLY) return;
-    if (state.sq[sq(m.toX, m.toY)] != EMPTY) return;
+    if (state.bd[sq(m.toX, m.toY)] != EMPTY) return;
     if (!(killers[ply][0] == m)) {
         killers[ply][1] = killers[ply][0];
         killers[ply][0] = m;
@@ -85,8 +131,8 @@ void Searcher::orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int pl
     int side = state.whiteTurn ? 0 : 1;
     auto score = [&](const Move &m) -> int {
         if (!ttBest.isNull() && m == ttBest) return 2000000;
-        uint8_t victim   = state.sq[sq(m.toX, m.toY)];
-        uint8_t attacker = state.sq[sq(m.fromX, m.fromY)];
+        uint8_t victim   = state.bd[sq(m.toX, m.toY)];
+        uint8_t attacker = state.bd[sq(m.fromX, m.fromY)];
         if (victim != EMPTY) {
             static const int vals[7] = {0,100,320,330,500,900,20000};
             return 900000 + vals[pieceType(victim)] * 10 - vals[pieceType(attacker)];
@@ -101,9 +147,7 @@ void Searcher::orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int pl
             if (!killers[ply][0].isNull() && m == killers[ply][0]) return 800000;
             if (!killers[ply][1].isNull() && m == killers[ply][1]) return 700000;
         }
-        int from = m.fromX * 8 + m.fromY;
-        int to   = m.toX   * 8 + m.toY;
-        return history[side][from][to];
+        return history[side][m.fromX*8+m.fromY][m.toX*8+m.toY];
     };
     std::sort(moves.begin(), moves.end(),
               [&](const Move &a, const Move &b){ return score(a) > score(b); });
@@ -117,17 +161,17 @@ int Searcher::quiescence(int alpha, int beta) {
     auto moves = generateCaptureMoves(state, state.whiteTurn);
     std::sort(moves.begin(), moves.end(), [&](const Move &a, const Move &b) {
         static const int vals[7] = {0,100,320,330,500,900,20000};
-        uint8_t va = state.sq[sq(a.toX, a.toY)];
-        uint8_t vb = state.sq[sq(b.toX, b.toY)];
-        return vals[pieceType(va != EMPTY ? va : (uint8_t)1)] >
-               vals[pieceType(vb != EMPTY ? vb : (uint8_t)1)];
+        uint8_t va = state.bd[sq(a.toX, a.toY)];
+        uint8_t vb = state.bd[sq(b.toX, b.toY)];
+        return vals[pieceType(va ? va : (uint8_t)1)] >
+               vals[pieceType(vb ? vb : (uint8_t)1)];
     });
 
     for (const auto &m : moves) {
-        BoardSnapshot saved = state;
-        if (!applyMove(m)) { undoMove(saved); continue; }
+        UndoRecord undo;
+        if (!applyMove(m, undo)) continue;
         int score = -quiescence(-beta, -alpha);
-        undoMove(saved);
+        undoMove(undo);
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
     }
@@ -135,10 +179,9 @@ int Searcher::quiescence(int alpha, int beta) {
 }
 
 int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
-    int origAlpha = alpha;
-
-    uint64_t hash   = computeZobrist(state);
-    Move     ttBest = Move::null();
+    int      origAlpha = alpha;
+    uint64_t hash      = computeZobrist(state);
+    Move     ttBest    = Move::null();
 
     const TTEntry *entry = tt.probe(hash);
     if (entry && entry->depth >= depth) {
@@ -165,8 +208,8 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
     int  moveIdx  = 0;
 
     for (const auto &m : moves) {
-        BoardSnapshot saved = state;
-        if (!applyMove(m)) { undoMove(saved); continue; }
+        UndoRecord undo;
+        if (!applyMove(m, undo)) continue;
         anyLegal = true;
 
         int score;
@@ -178,7 +221,7 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
                 score = -alphaBeta(depth-1, ply+1, -beta, -alpha);
         }
 
-        undoMove(saved);
+        undoMove(undo);
         ++moveIdx;
 
         if (score > best) { best = score; bestMove = m; }
@@ -186,8 +229,8 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
 
         if (alpha >= beta) {
             storeKiller(ply, m);
-            if (state.sq[sq(m.toX, m.toY)] == EMPTY && m.promotion == '\0') {
-                int side = saved.whiteTurn ? 0 : 1;
+            if (state.bd[sq(m.toX, m.toY)] == EMPTY && m.promotion == '\0') {
+                int side = undo.whiteTurn ? 0 : 1;
                 history[side][m.fromX*8+m.fromY][m.toX*8+m.toY] += depth * depth;
             }
             break;
@@ -225,8 +268,8 @@ std::string Searcher::getBestMove(bool white, int maxDepth) {
         int  moveIdx = 0;
 
         for (const auto &m : moves) {
-            BoardSnapshot saved = state;
-            if (!applyMove(m)) { undoMove(saved); continue; }
+            UndoRecord undo;
+            if (!applyMove(m, undo)) continue;
 
             int score;
             if (moveIdx == 0) {
@@ -237,7 +280,7 @@ std::string Searcher::getBestMove(bool white, int maxDepth) {
                     score = -alphaBeta(depth-1, 1, -beta, -alpha);
             }
 
-            undoMove(saved);
+            undoMove(undo);
             ++moveIdx;
 
             if (score > iterBest) {

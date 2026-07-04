@@ -5,8 +5,8 @@ static const int PST_PAWN[8][8] = {
     {  0,  0,  0,  0,  0,  0,  0,  0 },
     { 50, 50, 50, 50, 50, 50, 50, 50 },
     { 10, 10, 20, 30, 30, 20, 10, 10 },
-    {  5,  5, 10, 25, 25, 10,  5,  5 },
-    {  0,  0,  0, 20, 20,  0,  0,  0 },
+    {  5,  5, 10, 27, 27, 10,  5,  5 },
+    {  0,  0,  5, 25, 25,  5,  0,  0 },
     {  5, -5,-10,  0,  0,-10, -5,  5 },
     {  5, 10, 10,-20,-20, 10, 10,  5 },
     {  0,  0,  0,  0,  0,  0,  0,  0 },
@@ -96,7 +96,7 @@ static int pieceValueFast(uint8_t p) {
 int evaluate(const BoardSnapshot &snap) {
     int score = 0;
     for (int i = 0; i < 64; i++) {
-        uint8_t p = snap.sq[i];
+        uint8_t p = snap.bd[i];
         if (p == EMPTY) continue;
         int val = pieceValueFast(p) + *pstFor(p, sqRow(i), sqCol(i));
         score  += pieceIsWhite(p) ? val : -val;

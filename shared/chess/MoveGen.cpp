@@ -20,7 +20,7 @@ static inline void pushPromo(std::vector<Move> &moves,
 // isAttacked
 // ─────────────────────────────────────────────────────────────────────────────
 bool isAttacked(const BoardSnapshot &snap, int s, bool byWhite) {
-    const uint8_t *bd  = snap.sq;
+    const uint8_t *bd  = snap.bd;
     uint64_t       occ = snap.occ;
 
     uint8_t ePawn   = byWhite ? W_PAWN   : B_PAWN;
@@ -65,7 +65,7 @@ bool isAttacked(const BoardSnapshot &snap, int s, bool byWhite) {
 bool isInCheck(const BoardSnapshot &snap, bool white) {
     uint8_t king = white ? W_KING : B_KING;
     for (int i = 0; i < 64; i++)
-        if (snap.sq[i] == king)
+        if (snap.bd[i] == king)
             return isAttacked(snap, i, !white);
     return false;
 }
@@ -77,7 +77,7 @@ std::vector<Move> generateAllMoves(const BoardSnapshot &snap, bool white) {
     std::vector<Move> moves;
     moves.reserve(80);
 
-    const uint8_t *bd = snap.sq;
+    const uint8_t *bd = snap.bd;
 
     for (int s = 0; s < 64; s++) {
         uint8_t p = bd[s];
@@ -211,9 +211,9 @@ std::vector<Move> generateCaptureMoves(const BoardSnapshot &snap, bool white) {
     captures.reserve(32);
     for (const auto &m : generateAllMoves(snap, white)) {
         int ts = sq(m.toX, m.toY);
-        bool isCapture = snap.sq[ts] != EMPTY;
+        bool isCapture = snap.bd[ts] != EMPTY;
         bool isEP      = !isCapture &&
-                         pieceType(snap.sq[sq(m.fromX, m.fromY)]) == 1 &&
+                         pieceType(snap.bd[sq(m.fromX, m.fromY)]) == 1 &&
                          std::abs(m.toY - m.fromY) == 1 &&
                          m.toX == snap.enPassantX && m.toY == snap.enPassantY;
         if (isCapture || isEP || m.promotion != '\0')
@@ -230,9 +230,9 @@ void orderMoves(std::vector<Move> &moves, const BoardSnapshot &snap) {
     auto score = [&](const Move &m) -> int {
         int ts = sq(m.toX, m.toY);
         int s  = 0;
-        if (snap.sq[ts] != EMPTY)
-            s += vals[pieceType(snap.sq[ts])] * 10
-               - vals[pieceType(snap.sq[sq(m.fromX, m.fromY)])];
+        if (snap.bd[ts] != EMPTY)
+            s += vals[pieceType(snap.bd[ts])] * 10
+               - vals[pieceType(snap.bd[sq(m.fromX, m.fromY)])];
         if (m.promotion != '\0')
             s += pieceValue(m.promotion) - 100;
         return s;

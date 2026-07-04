@@ -16,7 +16,7 @@ export interface Position {
 export interface PieceProps {
   id: keyof typeof PIECES;
   position: Position;
-  onMoveEnd: () => void;
+  onMoveEnd: (isCheckmate?: boolean) => void;
   currentTurn: PIECE_COLOR;
   board: string[][];
 }

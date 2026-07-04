@@ -68,10 +68,9 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
       if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
         translateX.value = withTiming(toX * SIZE, { duration: 200 });
         translateY.value = withTiming(toY * SIZE, { duration: 200 });
-        onMoveEnd();
-        if (result === CHECK_STATUS.checkmate) {
-          Alert.alert(CHECK_STATUS.checkmate, `${currentTurn} wins!`);
-        }
+        const isCheckmate = result === CHECK_STATUS.checkmate;
+        onMoveEnd(isCheckmate);
+        if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
       }
     };
     runMove();
@@ -88,10 +87,9 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
       translateX.value = withTiming(toX * SIZE, { duration: 200 });
       translateY.value = withTiming(toY * SIZE, { duration: 200 });
-      onMoveEnd();
-      if (result === CHECK_STATUS.checkmate) {
-        Alert.alert(CHECK_STATUS.checkmate, `${currentTurn} wins!`);
-      }
+      const isCheckmate = result === CHECK_STATUS.checkmate;
+      onMoveEnd(isCheckmate);
+      if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
       translateX.value = withTiming(position.x * SIZE);
       translateY.value = withTiming(position.y * SIZE);
@@ -135,10 +133,9 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     if (result === 'valid' || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
       translateX.value = withTiming(newX * SIZE);
       translateY.value = withTiming(newY * SIZE);
-      onMoveEnd();
-      if (result === CHECK_STATUS.checkmate) {
-        Alert.alert(CHECK_STATUS.checkmate, `${currentTurn} wins!`);
-      }
+      const isCheckmate = result === CHECK_STATUS.checkmate;
+      onMoveEnd(isCheckmate);
+      if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
       translateX.value = withTiming(position.x * SIZE);
       translateY.value = withTiming(position.y * SIZE);

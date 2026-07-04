@@ -20,8 +20,24 @@ struct Move {
     static Move null() { return {-1,-1,-1,-1,'\0'}; }
 };
 
+struct SquareDelta {
+    uint8_t idx;
+    uint8_t before;
+};
+
+struct UndoRecord {
+    SquareDelta deltas[4];
+    uint8_t     deltaCount;
+    bool whiteTurn;
+    bool whiteKingMoved, blackKingMoved;
+    bool whiteRookAMoved, whiteRookHMoved;
+    bool blackRookAMoved, blackRookHMoved;
+    int  enPassantX, enPassantY;
+    uint64_t occ;
+};
+
 struct BoardSnapshot {
-    uint8_t sq[64];
+    uint8_t  bd[64];
     std::vector<std::vector<std::string>> board;
     bool whiteTurn;
     bool whiteKingMoved, blackKingMoved;
@@ -33,15 +49,15 @@ struct BoardSnapshot {
     void syncOccupancy() {
         occ = 0;
         for (int i = 0; i < 64; i++)
-            if (sq[i] != EMPTY) occ |= uint64_t(1) << i;
+            if (bd[i] != EMPTY) occ |= uint64_t(1) << i;
     }
 
     void syncFromString() {
-        memset(sq, EMPTY, 64);
+        memset(bd, EMPTY, 64);
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 const std::string &cell = board[r][c];
-                if (cell.empty()) { sq[r*8+c] = EMPTY; continue; }
+                if (cell.empty()) { bd[r*8+c] = EMPTY; continue; }
                 char ch = cell[0];
                 bool w  = isupper(ch) != 0;
                 uint8_t p = EMPTY;
@@ -53,7 +69,7 @@ struct BoardSnapshot {
                     case 'q': p = w ? W_QUEEN  : B_QUEEN;  break;
                     case 'k': p = w ? W_KING   : B_KING;   break;
                 }
-                sq[r*8+c] = p;
+                bd[r*8+c] = p;
             }
         }
         syncOccupancy();
@@ -66,7 +82,7 @@ struct BoardSnapshot {
         };
         for (int r = 0; r < 8; r++)
             for (int c = 0; c < 8; c++) {
-                uint8_t p = sq[r*8+c];
+                uint8_t p = bd[r*8+c];
                 board[r][c] = p == EMPTY ? "" : std::string(1, pieceChar[p]);
             }
     }

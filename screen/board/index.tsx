@@ -55,14 +55,16 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const [timerTick, setTimerTick] = useState(0);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
   const [lastAiMove, setLastAiMove] = useState<{ from: string; to: string } | null>(null);
+  const [gameOver, setGameOver] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget } = useSelection();
 
-  const refreshBoard = useCallback(() => {
+  const refreshBoard = useCallback((isCheckmate = false) => {
     setBoard(NativeChessModule.getBoard());
     setTurn(NativeChessModule.getTurn() as PIECE_COLOR);
+    if (isCheckmate) setGameOver(true);
   }, []);
 
   const [pendingPromotion, setPendingPromotion] = useState<{ move: string } | null>(null);
@@ -92,6 +94,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     if (gameMode !== 'computer') return;
     if (turn !== PIECE_COLOR.black) return;
     if (isComputerThinking) return;
+    if (gameOver) return;
 
     setIsComputerThinking(true);
 
@@ -103,19 +106,19 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
           setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
           if (result === CHECK_STATUS.checkmate) {
             refreshBoard();
+            setGameOver(true);
             Alert.alert('Checkmate', 'Computer wins!');
           } else {
             refreshBoard();
           }
         }
       } catch (e) {
-        // search failed — just hand turn back
       }
       setIsComputerThinking(false);
     });
 
     return () => task.cancel();
-  }, [turn, gameMode, isComputerThinking, refreshBoard]);
+  }, [turn, gameMode, isComputerThinking, gameOver, refreshBoard]);
 
   const finishPromotion = useCallback(async (piece: string) => {
     if (!pendingPromotion) return;
@@ -146,9 +149,9 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   }, [selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget]);
 
   const resetGame = useCallback(() => {
-    NativeChessModule.reset();
     setIsComputerThinking(false);
     setLastAiMove(null);
+    NativeChessModule.reset();
     refreshBoard();
   }, [refreshBoard]);
 

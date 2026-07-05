@@ -13,6 +13,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 ../../../../../shared/chess/Attacks.cpp
 ../../../../../shared/chess/Evaluation.cpp
 ../../../../../shared/chess/MoveGen.cpp
+../../../../../shared/chess/OpeningBook.cpp
 ../../../../../shared/chess/Perft.cpp
 ../../../../../shared/chess/Search.cpp
 ../../../../../shared/chess/TranspositionTable.cpp)
@@ -22,4 +23,4 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
 ../../../../../shared
 ../../../../../shared/chess)
 
-target_link_libraries(${CMAKE_PROJECT_NAME} log)
+target_link_libraries(${CMAKE_PROJECT_NAME} log android)

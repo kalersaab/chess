@@ -1,5 +1,6 @@
 #include "ChessEngine.h"
 #include "MoveGen.h"
+#include "OpeningBook.h"
 #include "Perft.h"
 #include "Search.h"
 #include <algorithm>
@@ -18,6 +19,8 @@ ChessEngine::ChessEngine() {
     reset();
 
     std::thread([]() {
+        openingBookLoad("performance.bin");
+
         BoardSnapshot tmp;
         tmp.board = {
             {"r","n","b","q","k","b","n","r"},
@@ -277,6 +280,8 @@ std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
 
 std::string ChessEngine::getBestMove(bool white, int depth) {
     std::lock_guard<std::mutex> lock(engineMutex);
+    std::string bookMove = openingBookProbe(snap);
+    if (!bookMove.empty()) return bookMove;
     Searcher searcher(snap);
     return searcher.getBestMove(white, depth);
 }

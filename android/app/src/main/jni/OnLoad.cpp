@@ -35,6 +35,9 @@
 #include <fbjni/fbjni.h>
 #include <react/renderer/componentregistry/ComponentDescriptorProviderRegistry.h>
 #include <NativeChessModule.h>
+#include <android/asset_manager_jni.h>
+
+extern "C" void setAssetManager(AAssetManager *mgr);
 
 #ifdef REACT_NATIVE_APP_CODEGEN_HEADER
 #include REACT_NATIVE_APP_CODEGEN_HEADER
@@ -127,4 +130,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
         registerComponentDescriptorsFromEntryPoint =
             &facebook::react::registerComponents;
   });
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_chess_MainActivity_initAssetManager(JNIEnv *env, jobject, jobject assetManager) {
+    AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
+    setAssetManager(mgr);
 }

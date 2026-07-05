@@ -1,0 +1,53 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  review:
+    # Run automatically on PR open/push, OR when someone comments "@claude review" on a PR
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@claude review'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # Tell Claude exactly what to do — a direct prompt runs review mode
+          # even on the automatic pull_request trigger (no @claude mention needed).
+          prompt: |
+            Review the changes in this pull request for the kalersaab/chess repository
+            (React Native app with a C++ engine core).
+
+            Focus on:
+            - Correctness bugs, especially in chess rules/move-generation logic
+              (castling rights, en passant, check/checkmate detection, promotion)
+            - Zobrist hashing / opening book consistency if touched
+            - JS <-> native (C++) bridge boundary issues: type mismatches, memory
+              ownership, thread safety
+            - Simplification, duplication, and obvious performance issues
+
+            Post findings as inline PR review comments on the specific lines involved,
+            with a short summary at the top of the review.
+
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Bash(npm run lint:*),Bash(npm run test:*)"

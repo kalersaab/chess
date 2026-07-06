@@ -12,6 +12,9 @@ export interface Spec extends TurboModule {
   tick(white: boolean): boolean;
   getValidMoves(square: string): string[];
   getBestMove(white: boolean, depth: number): Promise<string>;
+  getFEN(): string;
+  loadFEN(fen: string): boolean;
+  getPGN(): string;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

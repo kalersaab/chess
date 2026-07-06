@@ -25,6 +25,9 @@ public:
     jsi::Array   getBoard(jsi::Runtime &rt);
     jsi::Array   getValidMoves(jsi::Runtime &rt, std::string square);
     jsi::Value   getBestMove(jsi::Runtime &rt, bool white, int depth);
+    std::string  getFEN(jsi::Runtime &rt);
+    bool         loadFEN(jsi::Runtime &rt, std::string fen);
+    std::string  getPGN(jsi::Runtime &rt);
 
 private:
     std::unique_ptr<ChessEngine> engine;

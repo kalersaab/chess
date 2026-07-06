@@ -1,4 +1,4 @@
-package com.chess
+package com.android.chess
 
 import android.app.Application
 import com.facebook.react.PackageList

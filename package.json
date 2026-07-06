@@ -14,7 +14,7 @@
     "type": "modules",
     "jsSrcsDir": "specs",
     "android": {
-      "javaPackageName": "com.chess"
+      "javaPackageName": "com.android.chess"
     }
   },
   "dependencies": {

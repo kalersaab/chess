@@ -18,10 +18,18 @@ public:
     bool tick(bool white, int seconds = 1);
     std::string getBestMove(bool white, int depth = 4);
 
+    std::string getFEN() const;
+    bool        loadFEN(const std::string &fen);
+    std::string getPGN() const;
+    void        recordMove(const std::string &uci, const std::string &san);
+
 private:
     BoardSnapshot snap;
     static constexpr int DEFAULT_TIME = 10 * 60;
     int whiteSeconds;
     int blackSeconds;
     bool isInCheck(bool white) const;
+
+    std::vector<std::string> pgnMoves;
+    int fullMoveNumber;
 };

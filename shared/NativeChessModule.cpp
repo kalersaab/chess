@@ -82,4 +82,8 @@ jsi::Value NativeChessModule::getBestMove(jsi::Runtime &rt, bool white, int dept
     return Promise.callAsConstructor(rt, executor);
 }
 
+std::string NativeChessModule::getFEN(jsi::Runtime &) { return engine->getFEN(); }
+bool        NativeChessModule::loadFEN(jsi::Runtime &, std::string fen) { return engine->loadFEN(fen); }
+std::string NativeChessModule::getPGN(jsi::Runtime &) { return engine->getPGN(); }
+
 }

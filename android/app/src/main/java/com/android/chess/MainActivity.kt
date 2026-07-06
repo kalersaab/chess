@@ -1,4 +1,4 @@
-package com.chess
+package com.android.chess
 
 import android.content.res.AssetManager
 import android.os.Bundle

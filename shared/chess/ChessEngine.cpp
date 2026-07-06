@@ -61,6 +61,8 @@ void ChessEngine::reset() {
     snap.blackRookAMoved = snap.blackRookHMoved = false;
     snap.enPassantX      = snap.enPassantY      = -1;
     snap.syncFromString();
+    pgnMoves.clear();
+    fullMoveNumber = 1;
     resetTimer();
 }
 
@@ -214,6 +216,16 @@ std::string ChessEngine::makeMove(const std::string &move) {
     snap.whiteTurn = !snap.whiteTurn;
     snap.syncToString();
 
+    bool wasWhite = isW;
+    if (wasWhite) {
+        std::string san = std::string(1, (char)('a' + fromY)) + std::string(1, (char)('0' + (8 - toX)));
+        recordMove(move, san);
+    } else {
+        std::string san = std::string(1, (char)('a' + fromY)) + std::string(1, (char)('0' + (8 - toX)));
+        recordMove(move, san);
+        fullMoveNumber++;
+    }
+
     if (::isInCheck(snap, !isW))
         return isCheckmate(!isW) ? "checkmate" : "check";
 
@@ -284,4 +296,142 @@ std::string ChessEngine::getBestMove(bool white, int depth) {
     if (!bookMove.empty()) return bookMove;
     Searcher searcher(snap);
     return searcher.getBestMove(white, depth);
+}
+
+void ChessEngine::recordMove(const std::string &uci, const std::string &) {
+    pgnMoves.push_back(uci);
+}
+
+std::string ChessEngine::getFEN() const {
+    std::string fen;
+
+    static const char pieceChar[15] = {
+        '\0', 'P', 'N', 'B', 'R', 'Q', 'K', '\0',
+        '\0', 'p', 'n', 'b', 'r', 'q', 'k'
+    };
+
+    for (int row = 0; row < 8; row++) {
+        int empty = 0;
+        for (int col = 0; col < 8; col++) {
+            uint8_t p = snap.bd[sq(row, col)];
+            if (p == EMPTY) {
+                empty++;
+            } else {
+                if (empty > 0) { fen += (char)('0' + empty); empty = 0; }
+                fen += pieceChar[p];
+            }
+        }
+        if (empty > 0) fen += (char)('0' + empty);
+        if (row < 7) fen += '/';
+    }
+
+    fen += snap.whiteTurn ? " w " : " b ";
+
+    std::string castling;
+    if (!snap.whiteKingMoved && !snap.whiteRookHMoved) castling += 'K';
+    if (!snap.whiteKingMoved && !snap.whiteRookAMoved) castling += 'Q';
+    if (!snap.blackKingMoved && !snap.blackRookHMoved) castling += 'k';
+    if (!snap.blackKingMoved && !snap.blackRookAMoved) castling += 'q';
+    fen += castling.empty() ? "-" : castling;
+
+    fen += ' ';
+    if (snap.enPassantY >= 0 && snap.enPassantY < 8 && snap.enPassantX >= 0) {
+        fen += (char)('a' + snap.enPassantY);
+        fen += (char)('0' + (8 - snap.enPassantX));
+    } else {
+        fen += '-';
+    }
+
+    fen += " 0 " + std::to_string(fullMoveNumber);
+    return fen;
+}
+
+bool ChessEngine::loadFEN(const std::string &fen) {
+    std::lock_guard<std::mutex> lock(engineMutex);
+
+    BoardSnapshot next;
+    next.board.assign(8, std::vector<std::string>(8, ""));
+    next.whiteKingMoved = next.blackKingMoved = false;
+    next.whiteRookAMoved = next.whiteRookHMoved = false;
+    next.blackRookAMoved = next.blackRookHMoved = false;
+    next.enPassantX = next.enPassantY = -1;
+
+    size_t pos = 0;
+
+    int row = 0, col = 0;
+    while (pos < fen.size() && fen[pos] != ' ') {
+        char c = fen[pos++];
+        if (c == '/') { row++; col = 0; continue; }
+        if (c >= '1' && c <= '8') { col += (c - '0'); continue; }
+        if (row > 7 || col > 7) return false;
+        std::string cell(1, c);
+        next.board[row][col] = cell;
+        col++;
+    }
+    if (row != 7) return false;
+
+    if (pos >= fen.size()) return false;
+    pos++;
+    if (pos >= fen.size()) return false;
+    next.whiteTurn = (fen[pos] == 'w');
+    pos++;
+
+    if (pos >= fen.size() || fen[pos] != ' ') return false;
+    pos++;
+
+    bool wk = false, wq = false, bk = false, bq = false;
+    while (pos < fen.size() && fen[pos] != ' ') {
+        switch (fen[pos++]) {
+            case 'K': wk = true; break;
+            case 'Q': wq = true; break;
+            case 'k': bk = true; break;
+            case 'q': bq = true; break;
+        }
+    }
+    next.whiteKingMoved  = !(wk || wq);
+    next.whiteRookHMoved = !wk;
+    next.whiteRookAMoved = !wq;
+    next.blackKingMoved  = !(bk || bq);
+    next.blackRookHMoved = !bk;
+    next.blackRookAMoved = !bq;
+
+    if (pos < fen.size()) pos++;
+    if (pos < fen.size() && fen[pos] != '-') {
+        int epCol = fen[pos] - 'a';
+        int epRank = (pos + 1 < fen.size()) ? (fen[pos + 1] - '0') : -1;
+        next.enPassantY = epCol;
+        next.enPassantX = (epRank >= 1 && epRank <= 8) ? (8 - epRank) : -1;
+        pos += 2;
+    } else if (pos < fen.size()) {
+        pos++;
+    }
+
+    while (pos < fen.size() && fen[pos] == ' ') pos++;
+    while (pos < fen.size() && fen[pos] != ' ') pos++;
+    while (pos < fen.size() && fen[pos] == ' ') pos++;
+    fullMoveNumber = 1;
+    if (pos < fen.size()) {
+        fullMoveNumber = 0;
+        while (pos < fen.size() && fen[pos] >= '0' && fen[pos] <= '9')
+            fullMoveNumber = fullMoveNumber * 10 + (fen[pos++] - '0');
+        if (fullMoveNumber < 1) fullMoveNumber = 1;
+    }
+
+    next.syncFromString();
+    snap = next;
+    pgnMoves.clear();
+    return true;
+}
+
+std::string ChessEngine::getPGN() const {
+    std::string pgn = "[Event \"Chess Game\"]\n[Site \"Chess App\"]\n[White \"White\"]\n[Black \"Black\"]\n\n";
+
+    for (size_t i = 0; i < pgnMoves.size(); i++) {
+        if (i % 2 == 0)
+            pgn += std::to_string(i / 2 + 1) + ". ";
+        pgn += pgnMoves[i] + " ";
+    }
+
+    if (!pgnMoves.empty()) pgn += "*";
+    return pgn;
 }

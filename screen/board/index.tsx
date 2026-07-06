@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   Image,
   Text,
+  TextInput,
+  Modal,
+  ScrollView,
+  Clipboard,
   InteractionManager,
 } from 'react-native';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -56,6 +60,8 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const [isComputerThinking, setIsComputerThinking] = useState(false);
   const [lastAiMove, setLastAiMove] = useState<{ from: string; to: string } | null>(null);
   const [gameOver, setGameOver] = useState(false);
+  const [showFenPgn, setShowFenPgn] = useState(false);
+  const [fenInput, setFenInput] = useState('');
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -71,10 +77,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-
-    // Don't tick while the AI is computing — its thinking time shouldn't
-    // count against black's clock.
-    if (isComputerThinking) return;
 
     intervalRef.current = setInterval(() => {
       const activeWhite = turn === PIECE_COLOR.white;
@@ -151,9 +153,28 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const resetGame = useCallback(() => {
     setIsComputerThinking(false);
     setLastAiMove(null);
+    setGameOver(false);
     NativeChessModule.reset();
     refreshBoard();
   }, [refreshBoard]);
+
+  const handleBack = useCallback(() => {
+    Alert.alert(
+      'Quit game',
+      'Are you sure you want to go back? The current game will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Quit',
+          style: 'destructive',
+          onPress: () => {
+            resetGame();
+            onBack();
+          },
+        },
+      ],
+    );
+  }, [resetGame, onBack]);
 
   const humanTurn =
     gameMode === 'computer'
@@ -163,7 +184,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.headerBtn} onPress={onBack}>
+        <TouchableOpacity style={styles.headerBtn} onPress={handleBack}>
           <Text style={styles.backIcon}>‹</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
@@ -178,7 +199,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
           <Text style={styles.resetIconText}>↺</Text>
         </TouchableOpacity>
       </View>
-
       <Clock
         label="Black"
         seconds={blackTime}

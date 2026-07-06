@@ -133,7 +133,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_chess_MainActivity_initAssetManager(JNIEnv *env, jobject, jobject assetManager) {
+Java_com_android_chess_MainActivity_initAssetManager(JNIEnv *env, jobject, jobject assetManager) {
     AAssetManager *mgr = AAssetManager_fromJava(env, assetManager);
     setAssetManager(mgr);
 }

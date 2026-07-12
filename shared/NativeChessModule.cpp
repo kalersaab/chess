@@ -85,5 +85,7 @@ jsi::Value NativeChessModule::getBestMove(jsi::Runtime &rt, bool white, int dept
 std::string NativeChessModule::getFEN(jsi::Runtime &) { return engine->getFEN(); }
 bool        NativeChessModule::loadFEN(jsi::Runtime &, std::string fen) { return engine->loadFEN(fen); }
 std::string NativeChessModule::getPGN(jsi::Runtime &) { return engine->getPGN(); }
+bool        NativeChessModule::loadPGN(jsi::Runtime &, std::string pgn) { return engine->loadPGN(pgn); }
+bool        NativeChessModule::goToMove(jsi::Runtime &, int index) { return engine->goToMove(index); }
 
 }

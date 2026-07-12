@@ -435,3 +435,313 @@ std::string ChessEngine::getPGN() const {
     if (!pgnMoves.empty()) pgn += "*";
     return pgn;
 }
+
+static std::string sanToUci(BoardSnapshot &snap, const std::string &san) {
+    if (san.empty()) return "";
+
+    std::string s = san;
+    while (!s.empty() && (s.back() == '+' || s.back() == '#' ||
+                           s.back() == '!' || s.back() == '?'))
+        s.pop_back();
+    if (s.empty()) return "";
+
+    bool isWhite = snap.whiteTurn;
+
+    if (s == "O-O-O" || s == "0-0-0") {
+        int row = isWhite ? 7 : 0;
+        Move m = {row, 4, row, 2, '\0'};
+        for (auto &legal : generateAllMoves(snap, isWhite))
+            if (legal.fromX == m.fromX && legal.fromY == m.fromY &&
+                legal.toX   == m.toX   && legal.toY   == m.toY)
+                return moveToUCI(legal);
+        return "";
+    }
+    if (s == "O-O" || s == "0-0") {
+        int row = isWhite ? 7 : 0;
+        Move m = {row, 4, row, 6, '\0'};
+        for (auto &legal : generateAllMoves(snap, isWhite))
+            if (legal.fromX == m.fromX && legal.fromY == m.fromY &&
+                legal.toX   == m.toX   && legal.toY   == m.toY)
+                return moveToUCI(legal);
+        return "";
+    }
+
+    char promoPiece = '\0';
+    if (s.size() >= 2) {
+        char last = (char)tolower(s.back());
+        if (last == 'q' || last == 'r' || last == 'b' || last == 'n') {
+            if (s.size() >= 3 && s[s.size()-2] == '=') {
+                promoPiece = last;
+                s = s.substr(0, s.size() - 2);
+            } else if (isupper(s.back()) || (s.size() >= 2 && s[s.size()-2] == '=')) {
+                promoPiece = last;
+                s.pop_back();
+            }
+        }
+
+        if (!s.empty() && s.back() == '=') s.pop_back();
+    }
+
+    uint8_t pieceT = 1; // pawn
+    size_t  idx    = 0;
+    char    fc     = s[0];
+    if (fc == 'N') { pieceT = 2; idx = 1; }
+    else if (fc == 'B') { pieceT = 3; idx = 1; }
+    else if (fc == 'R') { pieceT = 4; idx = 1; }
+    else if (fc == 'Q') { pieceT = 5; idx = 1; }
+    else if (fc == 'K') { pieceT = 6; idx = 1; }
+
+    std::string rest = s.substr(idx);
+    std::string noX;
+    for (char c : rest) if (c != 'x') noX += c;
+
+    if (noX.size() < 2) return "";
+    char toFileC = noX[noX.size() - 2];
+    char toRankC = noX[noX.size() - 1];
+    if (toFileC < 'a' || toFileC > 'h' || toRankC < '1' || toRankC > '8') return "";
+    int toCol = toFileC - 'a';
+    int toRow = 8 - (toRankC - '0');
+
+    std::string disambig = noX.substr(0, noX.size() - 2);
+    int disambigFile = -1, disambigRank = -1;
+    for (char c : disambig) {
+        if (c >= 'a' && c <= 'h') disambigFile = c - 'a';
+        else if (c >= '1' && c <= '8') disambigRank = 8 - (c - '0');
+    }
+
+    auto legal = generateAllMoves(snap, isWhite);
+    std::vector<Move> candidates;
+    for (auto &m : legal) {
+        if (m.toX != toRow || m.toY != toCol) continue;
+        uint8_t p = snap.bd[sq(m.fromX, m.fromY)];
+        if (pieceType(p) != pieceT) continue;
+        if (disambigFile >= 0 && m.fromY != disambigFile) continue;
+        if (disambigRank >= 0 && m.fromX != disambigRank) continue;
+        if (promoPiece != '\0' && m.promotion != promoPiece) continue;
+        if (promoPiece == '\0' && pieceT == 1 &&
+            m.toX == (isWhite ? 0 : 7) && m.promotion == '\0') continue;
+        candidates.push_back(m);
+    }
+    if (candidates.size() == 1) return moveToUCI(candidates[0]);
+    if (candidates.empty() && promoPiece == '\0' && pieceT == 1) {
+        for (auto &m : legal) {
+            if (m.toX != toRow || m.toY != toCol) continue;
+            uint8_t p = snap.bd[sq(m.fromX, m.fromY)];
+            if (pieceType(p) != 1) continue;
+            if (disambigFile >= 0 && m.fromY != disambigFile) continue;
+            if (disambigRank >= 0 && m.fromX != disambigRank) continue;
+            if (m.promotion == 'q') return moveToUCI(m);
+        }
+    }
+    if (!candidates.empty()) return moveToUCI(candidates[0]);
+    return "";
+}
+
+bool ChessEngine::loadPGN(const std::string &pgn) {
+    std::lock_guard<std::mutex> lock(engineMutex);
+
+    snap.board = {
+        {"r","n","b","q","k","b","n","r"},
+        {"p","p","p","p","p","p","p","p"},
+        {"","","","","","","",""},{"","","","","","","",""},
+        {"","","","","","","",""},{"","","","","","","",""},
+        {"P","P","P","P","P","P","P","P"},
+        {"R","N","B","Q","K","B","N","R"},
+    };
+    snap.whiteTurn       = true;
+    snap.whiteKingMoved  = snap.blackKingMoved  = false;
+    snap.whiteRookAMoved = snap.whiteRookHMoved = false;
+    snap.blackRookAMoved = snap.blackRookHMoved = false;
+    snap.enPassantX      = snap.enPassantY      = -1;
+    snap.syncFromString();
+    pgnMoves.clear();
+    fullMoveNumber = 1;
+
+    std::string body = pgn;
+    while (true) {
+        size_t lb = body.find('[');
+        if (lb == std::string::npos) break;
+        size_t rb = body.find(']', lb);
+        if (rb == std::string::npos) break;
+        body.erase(lb, rb - lb + 1);
+    }
+
+    std::vector<std::string> tokens;
+    size_t i = 0;
+    while (i < body.size()) {
+        if (isspace((unsigned char)body[i])) { i++; continue; }
+        if (body[i] == '{') {
+            while (i < body.size() && body[i] != '}') i++;
+            i++; continue;
+        }
+
+        if (body[i] == '(') {
+            int depth = 1; i++;
+            while (i < body.size() && depth > 0) {
+                if (body[i] == '(') depth++;
+                else if (body[i] == ')') depth--;
+                i++;
+            }
+            continue;
+        }
+        size_t start = i;
+        while (i < body.size() && !isspace((unsigned char)body[i]) &&
+               body[i] != '{' && body[i] != '(') i++;
+        tokens.push_back(body.substr(start, i - start));
+    }
+
+    for (auto &tok : tokens) {
+        if (tok.empty()) continue;
+
+        if (isdigit((unsigned char)tok[0])) continue;
+        if (tok == "1-0" || tok == "0-1" || tok == "1/2-1/2" || tok == "*") continue;
+
+        std::string uci = sanToUci(snap, tok);
+        if (uci.empty()) return false;
+
+        int fromX = 8 - (uci[1] - '0'), fromY = uci[0] - 'a';
+        int toX   = 8 - (uci[3] - '0'), toY   = uci[2] - 'a';
+        uint8_t *s     = snap.bd;
+        uint8_t  piece = s[sq(fromX, fromY)];
+        bool     isW   = pieceIsWhite(piece);
+        uint8_t  tp    = pieceType(piece);
+        bool isCastle  = (tp == 6 && std::abs(toY - fromY) == 2 && fromX == toX);
+        bool isEP      = (tp == 1 && std::abs(toY - fromY) == 1 &&
+                          s[sq(toX, toY)] == EMPTY &&
+                          toX == snap.enPassantX && toY == snap.enPassantY);
+
+        if (isCastle) {
+            bool ks = (toY == 6);
+            int rf = ks ? 7 : 0, rt = ks ? 5 : 3;
+            s[sq(toX, toY)]    = piece;
+            s[sq(fromX, fromY)] = EMPTY;
+            s[sq(toX, rt)]     = s[sq(toX, rf)];
+            s[sq(toX, rf)]     = EMPTY;
+        } else {
+            s[sq(toX, toY)]    = piece;
+            s[sq(fromX, fromY)] = EMPTY;
+            if (isEP) s[sq(fromX, toY)] = EMPTY;
+            if (uci.size() == 5) {
+                char pp = uci[4];
+                uint8_t promo;
+                switch (pp) {
+                    case 'q': promo = isW ? W_QUEEN  : B_QUEEN;  break;
+                    case 'r': promo = isW ? W_ROOK   : B_ROOK;   break;
+                    case 'b': promo = isW ? W_BISHOP : B_BISHOP; break;
+                    default:  promo = isW ? W_KNIGHT : B_KNIGHT; break;
+                }
+                s[sq(toX, toY)] = promo;
+            }
+        }
+
+        snap.enPassantX = snap.enPassantY = -1;
+        if (piece == W_KING) snap.whiteKingMoved  = true;
+        if (piece == B_KING) snap.blackKingMoved  = true;
+        if (fromX == 7 && fromY == 0) snap.whiteRookAMoved = true;
+        if (fromX == 7 && fromY == 7) snap.whiteRookHMoved = true;
+        if (fromX == 0 && fromY == 0) snap.blackRookAMoved = true;
+        if (fromX == 0 && fromY == 7) snap.blackRookHMoved = true;
+        if (tp == 1 && std::abs(toX - fromX) == 2) {
+            snap.enPassantX = (fromX + toX) / 2;
+            snap.enPassantY = fromY;
+        }
+
+        snap.syncOccupancy();
+        snap.whiteTurn = !snap.whiteTurn;
+        if (!isW) fullMoveNumber++;
+        pgnMoves.push_back(uci);
+    }
+
+    snap.syncToString();
+    return true;
+}
+
+bool ChessEngine::goToMove(int index) {
+    std::lock_guard<std::mutex> lock(engineMutex);
+
+    if (index < -1 || index >= (int)pgnMoves.size()) return false;
+
+    std::vector<std::string> allMoves = pgnMoves;
+
+    snap.board = {
+        {"r","n","b","q","k","b","n","r"},
+        {"p","p","p","p","p","p","p","p"},
+        {"","","","","","","",""},{"","","","","","","",""},
+        {"","","","","","","",""},{"","","","","","","",""},
+        {"P","P","P","P","P","P","P","P"},
+        {"R","N","B","Q","K","B","N","R"},
+    };
+    snap.whiteTurn       = true;
+    snap.whiteKingMoved  = snap.blackKingMoved  = false;
+    snap.whiteRookAMoved = snap.whiteRookHMoved = false;
+    snap.blackRookAMoved = snap.blackRookHMoved = false;
+    snap.enPassantX      = snap.enPassantY      = -1;
+    snap.syncFromString();
+    pgnMoves.clear();
+    fullMoveNumber = 1;
+
+    for (int i = 0; i <= index; i++) {
+        const std::string &uci = allMoves[i];
+        if (uci.size() < 4) return false;
+
+        int fromX = 8 - (uci[1] - '0'), fromY = uci[0] - 'a';
+        int toX   = 8 - (uci[3] - '0'), toY   = uci[2] - 'a';
+        uint8_t *s    = snap.bd;
+        uint8_t  piece = s[sq(fromX, fromY)];
+        if (piece == EMPTY) return false;
+        bool    isW   = pieceIsWhite(piece);
+        uint8_t tp    = pieceType(piece);
+        bool isCastle = (tp == 6 && std::abs(toY - fromY) == 2 && fromX == toX);
+        bool isEP     = (tp == 1 && std::abs(toY - fromY) == 1 &&
+                         s[sq(toX, toY)] == EMPTY &&
+                         toX == snap.enPassantX && toY == snap.enPassantY);
+
+        if (isCastle) {
+            bool ks = (toY == 6);
+            int rf = ks ? 7 : 0, rt = ks ? 5 : 3;
+            s[sq(toX, toY)]    = piece;
+            s[sq(fromX, fromY)] = EMPTY;
+            s[sq(toX, rt)]     = s[sq(toX, rf)];
+            s[sq(toX, rf)]     = EMPTY;
+        } else {
+            s[sq(toX, toY)]    = piece;
+            s[sq(fromX, fromY)] = EMPTY;
+            if (isEP) s[sq(fromX, toY)] = EMPTY;
+            if (uci.size() == 5) {
+                char pp = uci[4];
+                uint8_t promo;
+                switch (pp) {
+                    case 'q': promo = isW ? W_QUEEN  : B_QUEEN;  break;
+                    case 'r': promo = isW ? W_ROOK   : B_ROOK;   break;
+                    case 'b': promo = isW ? W_BISHOP : B_BISHOP; break;
+                    default:  promo = isW ? W_KNIGHT : B_KNIGHT; break;
+                }
+                s[sq(toX, toY)] = promo;
+            }
+        }
+
+        snap.enPassantX = snap.enPassantY = -1;
+        if (piece == W_KING) snap.whiteKingMoved  = true;
+        if (piece == B_KING) snap.blackKingMoved  = true;
+        if (fromX == 7 && fromY == 0) snap.whiteRookAMoved = true;
+        if (fromX == 7 && fromY == 7) snap.whiteRookHMoved = true;
+        if (fromX == 0 && fromY == 0) snap.blackRookAMoved = true;
+        if (fromX == 0 && fromY == 7) snap.blackRookHMoved = true;
+        if (tp == 1 && std::abs(toX - fromX) == 2) {
+            snap.enPassantX = (fromX + toX) / 2;
+            snap.enPassantY = fromY;
+        }
+
+        snap.syncOccupancy();
+        snap.whiteTurn = !snap.whiteTurn;
+        if (!isW) fullMoveNumber++;
+        pgnMoves.push_back(uci);
+    }
+
+    // Restore remaining moves (for future navigation)
+    for (int i = index + 1; i < (int)allMoves.size(); i++)
+        pgnMoves.push_back(allMoves[i]);
+
+    snap.syncToString();
+    return true;
+}

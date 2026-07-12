@@ -28,6 +28,8 @@ public:
     std::string  getFEN(jsi::Runtime &rt);
     bool         loadFEN(jsi::Runtime &rt, std::string fen);
     std::string  getPGN(jsi::Runtime &rt);
+    bool         loadPGN(jsi::Runtime &rt, std::string pgn);
+    bool         goToMove(jsi::Runtime &rt, int index);
 
 private:
     std::unique_ptr<ChessEngine> engine;

@@ -21,6 +21,8 @@ public:
     std::string getFEN() const;
     bool        loadFEN(const std::string &fen);
     std::string getPGN() const;
+    bool        loadPGN(const std::string &pgn);
+    bool        goToMove(int index);
     void        recordMove(const std::string &uci, const std::string &san);
 
 private:

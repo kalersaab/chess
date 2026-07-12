@@ -15,6 +15,8 @@ export interface Spec extends TurboModule {
   getFEN(): string;
   loadFEN(fen: string): boolean;
   getPGN(): string;
+  loadPGN(pgn: string): boolean;
+  goToMove(index: number): boolean;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

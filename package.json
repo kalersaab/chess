@@ -1,5 +1,5 @@
 {
-  "name": "chess",
+  "name": "@kalersaab/chess-engine",
   "version": "0.0.1",
   "private": false,
   "scripts": {
@@ -49,5 +49,9 @@
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kalersaab/chess.git"
   }
 }

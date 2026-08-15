@@ -19,7 +19,6 @@ import MoveHighlights from '../MoveHighlights';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
 import { PIECES } from '../../utils';
 import { SelectionProvider, useSelection } from '../../context';
-import Clock from '../clock';
 import { BoardProps } from '../../interface';
 
 const { width } = Dimensions.get('window');
@@ -114,7 +113,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const [showFenModal, setShowFenModal] = useState(false);
   const [fenInput, setFenInput] = useState('');
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget } = useSelection();
   const [pendingPromotion, setPendingPromotion] = useState<{ move: string } | null>(null);
 
@@ -126,23 +124,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     setCurrentMoveIdx(parsed.length - 1);
     if (isCheckmate) setGameOver(true);
   }, []);
-
-  useEffect(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (isComputerThinking) return;
-
-    intervalRef.current = setInterval(() => {
-      const activeWhite = turn === PIECE_COLOR.white;
-      const stillHasTime = NativeChessModule.tick(activeWhite);
-      if (!stillHasTime) {
-        clearInterval(intervalRef.current!);
-        const winner = activeWhite ? PIECE_COLOR.black : PIECE_COLOR.white;
-        Alert.alert('Time', `${winner} wins on time!`);
-      }
-    }, 1000);
-
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [turn, isComputerThinking]);
 
   useEffect(() => {
     if (gameMode !== 'computer') return;
@@ -247,8 +228,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     }
   }, [fenInput, refreshBoard]);
 
-  const whiteTime = NativeChessModule.getWhiteTime();
-  const blackTime = NativeChessModule.getBlackTime();
   const isWhiteTurn = turn === PIECE_COLOR.white;
   const humanTurn = gameMode === 'computer' ? turn === PIECE_COLOR.white && !isComputerThinking : true;
 
@@ -274,7 +253,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
       </View>
 
       {/* Black clock + moves above board */}
-      <Clock label="Black" seconds={blackTime} isActive={!isWhiteTurn} isLow={blackTime <= 30} />
       <MoveTable moves={moves} currentMoveIdx={currentMoveIdx} onMovePress={handleMovePress} />
 
       {/* Board */}
@@ -315,9 +293,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
           </View>
         )}
       </View>
-
-      {/* White clock below board */}
-      <Clock label="White" seconds={whiteTime} isActive={isWhiteTurn} isLow={whiteTime <= 30} />
 
       {/* FEN load modal */}
       <Modal visible={showFenModal} transparent animationType="fade" onRequestClose={() => setShowFenModal(false)}>

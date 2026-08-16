@@ -44,5 +44,6 @@ export interface ClockProps {
 export interface BoardProps {
   gameMode: GameMode;
   onBack: () => void;
+  initialTimeSeconds?: number;
 }
 

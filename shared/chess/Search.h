@@ -9,6 +9,8 @@
 static constexpr int MAX_PLY         = 64;
 static constexpr int KILLERS_PER_PLY = 2;
 
+static constexpr int LMR_TABLE[MAX_PLY][256] = {};
+
 class Searcher {
 public:
     explicit Searcher(BoardSnapshot &state);
@@ -25,5 +27,6 @@ private:
     void orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int ply) const;
     void storeKiller(int ply, const Move &m);
     int  quiescence(int alpha, int beta);
-    int  alphaBeta(int depth, int ply, int alpha, int beta);
+    int  alphaBeta(int depth, int ply, int alpha, int beta, bool allowNull = true);
+    int  getLMRReduction(int depth, int moveIdx) const;
 };

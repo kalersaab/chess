@@ -127,6 +127,19 @@ void Searcher::storeKiller(int ply, const Move &m) {
     }
 }
 
+int Searcher::getLMRReduction(int depth, int moveIdx) const {
+    if (depth < 3 || moveIdx < 3) return 0;
+    int logMoveIdx = 0, temp = moveIdx;
+    while (temp > 1) { logMoveIdx++; temp /= 2; }
+    
+    int logDepth = 0;
+    temp = depth;
+    while (temp > 1) { logDepth++; temp /= 2; }
+    
+    int reduction = (logMoveIdx + 1) / 2 + (logDepth + 1) / 4;
+    return std::min(reduction, depth - 1); // Don't reduce more than depth allows
+}
+
 void Searcher::orderMovesEx(std::vector<Move> &moves, const Move &ttBest, int ply) const {
     int side = state.whiteTurn ? 0 : 1;
     auto score = [&](const Move &m) -> int {
@@ -178,7 +191,7 @@ int Searcher::quiescence(int alpha, int beta) {
     return alpha;
 }
 
-int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
+int Searcher::alphaBeta(int depth, int ply, int alpha, int beta, bool allowNull) {
     int      origAlpha = alpha;
     uint64_t hash      = computeZobrist(state);
     Move     ttBest    = Move::null();
@@ -198,6 +211,25 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
     }
 
     if (depth == 0) return quiescence(alpha, beta);
+    if (allowNull && depth >= 3 && !isInCheck(state, state.whiteTurn)) {
+        const int R = depth >= 6 ? 3 : 2;
+        
+        UndoRecord undo;
+        undo.whiteTurn = state.whiteTurn;
+        undo.enPassantX = state.enPassantX;
+        undo.enPassantY = state.enPassantY;
+        state.enPassantX = state.enPassantY = -1;
+        state.whiteTurn = !state.whiteTurn;
+        
+        int nullScore = -alphaBeta(depth - R - 1, ply + 1, -beta, -beta + 1, false);
+
+        state.whiteTurn = undo.whiteTurn;
+        state.enPassantX = undo.enPassantX;
+        state.enPassantY = undo.enPassantY;
+        
+        if (nullScore >= beta)
+            return beta;
+    }
 
     auto moves = generateAllMoves(state, state.whiteTurn);
     orderMovesEx(moves, ttBest, ply);
@@ -213,12 +245,28 @@ int Searcher::alphaBeta(int depth, int ply, int alpha, int beta) {
         anyLegal = true;
 
         int score;
+
+        bool isCapture = state.bd[sq(m.toX, m.toY)] != EMPTY;
+        bool isPromotion = m.promotion != '\0';
+        bool isKiller = (ply < MAX_PLY && !killers[ply][0].isNull() && m == killers[ply][0]) ||
+                        (ply < MAX_PLY && !killers[ply][1].isNull() && m == killers[ply][1]);
+
+        bool shouldUseLMR = !isCapture && !isPromotion && !isKiller && moveIdx >= 3 && depth >= 3;
+        int lmrReduction = shouldUseLMR ? getLMRReduction(depth, moveIdx) : 0;
+        int searchDepth = depth - 1 - lmrReduction;
+        
         if (moveIdx == 0) {
-            score = -alphaBeta(depth-1, ply+1, -beta, -alpha);
+            score = -alphaBeta(depth-1, ply+1, -beta, -alpha, true);
         } else {
-            score = -alphaBeta(depth-1, ply+1, -alpha-1, -alpha);
-            if (score > alpha && score < beta)
-                score = -alphaBeta(depth-1, ply+1, -beta, -alpha);
+          if (shouldUseLMR && searchDepth < depth - 1) {
+                score = -alphaBeta(searchDepth, ply+1, -alpha-1, -alpha, true);
+                if (score > alpha && score < beta)
+                    score = -alphaBeta(depth-1, ply+1, -beta, -alpha, true);
+            } else {
+                score = -alphaBeta(depth-1, ply+1, -alpha-1, -alpha, true);
+                if (score > alpha && score < beta)
+                    score = -alphaBeta(depth-1, ply+1, -beta, -alpha, true);
+            }
         }
 
         undoMove(undo);
@@ -273,11 +321,11 @@ std::string Searcher::getBestMove(bool white, int maxDepth) {
 
             int score;
             if (moveIdx == 0) {
-                score = -alphaBeta(depth-1, 1, -beta, -alpha);
+                score = -alphaBeta(depth-1, 1, -beta, -alpha, true);
             } else {
-                score = -alphaBeta(depth-1, 1, -alpha-1, -alpha);
+                score = -alphaBeta(depth-1, 1, -alpha-1, -alpha, true);
                 if (score > alpha && score < beta)
-                    score = -alphaBeta(depth-1, 1, -beta, -alpha);
+                    score = -alphaBeta(depth-1, 1, -beta, -alpha, true);
             }
 
             undoMove(undo);

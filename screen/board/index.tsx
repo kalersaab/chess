@@ -16,6 +16,7 @@ import Background from '../Background';
 import NativeChessModule from '../../specs/NativeChessModule';
 import Piece from '../pieces';
 import MoveHighlights from '../MoveHighlights';
+import Clock from '../clock';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
 import { PIECES } from '../../utils';
 import { SelectionProvider, useSelection } from '../../context';
@@ -44,7 +45,6 @@ const AiMoveHighlight = ({ lastAiMove }: AiHighlightProps) => {
   );
 };
 
-// Parses the move list out of a PGN string into pairs: [['e2e4','e7e5'], ...]
 function parsePgnMoves(pgn: string): string[] {
   const body = pgn.replace(/\[.*?\]\n?/g, '').trim();
   const tokens = body.split(/\s+/).filter(t => t && !/^\d+\./.test(t) && !/^[*10-]/.test(t));
@@ -102,7 +102,7 @@ const MoveTable = ({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
   );
 };
 
-function BoardInner({ gameMode, onBack }: BoardProps) {
+function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) {
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
   const [turn, setTurn] = useState<PIECE_COLOR>(() => NativeChessModule.getTurn() as PIECE_COLOR);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
@@ -112,6 +112,10 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
   const [currentMoveIdx, setCurrentMoveIdx] = useState(-1);
   const [showFenModal, setShowFenModal] = useState(false);
   const [fenInput, setFenInput] = useState('');
+  const [whiteTimeSeconds, setWhiteTimeSeconds] = useState(initialTimeSeconds);
+  const [blackTimeSeconds, setBlackTimeSeconds] = useState(initialTimeSeconds);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerInitializedRef = useRef(false);
 
   const { selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget } = useSelection();
   const [pendingPromotion, setPendingPromotion] = useState<{ move: string } | null>(null);
@@ -124,6 +128,40 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     setCurrentMoveIdx(parsed.length - 1);
     if (isCheckmate) setGameOver(true);
   }, []);
+
+  useEffect(() => {
+    if (gameMode !== 'players') return;
+    if (gameOver) return;
+
+    if (!timerInitializedRef.current) {
+      NativeChessModule.resetTimer();
+      timerInitializedRef.current = true;
+    }
+
+    timerIntervalRef.current = setInterval(() => {
+      const whiteTicks = NativeChessModule.getWhiteTime();
+      const blackTicks = NativeChessModule.getBlackTime();
+      
+      setWhiteTimeSeconds(whiteTicks);
+      setBlackTimeSeconds(blackTicks);
+
+      const isWhiteTurn = turn === PIECE_COLOR.white;
+      const timeRemains = NativeChessModule.tick(isWhiteTurn, 1);
+
+      if (!timeRemains) {
+        setGameOver(true);
+        const winner = isWhiteTurn ? 'Black' : 'White';
+        const loser = isWhiteTurn ? 'White' : 'Black';
+        Alert.alert('Time\'s up!', `${loser} ran out of time. ${winner} wins!`);
+      }
+    }, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [gameMode, turn, gameOver]);
 
   useEffect(() => {
     if (gameMode !== 'computer') return;
@@ -146,7 +184,7 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
             refreshBoard();
           }
         }
-      } catch (_) {}
+      } catch {}
       setIsComputerThinking(false);
     });
 
@@ -179,9 +217,13 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     setGameOver(false);
     setMoves([]);
     setCurrentMoveIdx(-1);
+    setWhiteTimeSeconds(initialTimeSeconds);
+    setBlackTimeSeconds(initialTimeSeconds);
+    timerInitializedRef.current = false;
     NativeChessModule.reset();
+    NativeChessModule.resetTimer();
     refreshBoard();
-  }, [refreshBoard]);
+  }, [refreshBoard, initialTimeSeconds]);
 
   const handleMovePress = useCallback((index: number) => {
     const ok = NativeChessModule.goToMove(index);
@@ -208,7 +250,6 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
     const input = fenInput.trim();
     if (!input) return;
 
-    // Detect PGN vs FEN: PGN contains move numbers or header tags
     const isPgn = /\d+\./.test(input) || input.startsWith('[');
     const ok = isPgn
       ? NativeChessModule.loadPGN(input)
@@ -219,6 +260,10 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
       setGameOver(false);
       setFenInput('');
       setShowFenModal(false);
+      setWhiteTimeSeconds(initialTimeSeconds);
+      setBlackTimeSeconds(initialTimeSeconds);
+      timerInitializedRef.current = false;
+      NativeChessModule.resetTimer();
       refreshBoard();
     } else {
       Alert.alert(
@@ -226,9 +271,8 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
         isPgn ? 'Could not parse that PGN string. Check the moves are valid.' : 'Could not parse that FEN string.',
       );
     }
-  }, [fenInput, refreshBoard]);
+  }, [fenInput, refreshBoard, initialTimeSeconds]);
 
-  const isWhiteTurn = turn === PIECE_COLOR.white;
   const humanTurn = gameMode === 'computer' ? turn === PIECE_COLOR.white && !isComputerThinking : true;
 
   return (
@@ -252,10 +296,16 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
         </TouchableOpacity>
       </View>
 
-      {/* Black clock + moves above board */}
-      <MoveTable moves={moves} currentMoveIdx={currentMoveIdx} onMovePress={handleMovePress} />
+      {gameMode === 'players' && (
+        <Clock
+          label="Black"
+          seconds={blackTimeSeconds}
+          isActive={turn === PIECE_COLOR.black}
+          isLow={blackTimeSeconds < 60}
+        />
+      )}
 
-      {/* Board */}
+      <MoveTable moves={moves} currentMoveIdx={currentMoveIdx} onMovePress={handleMovePress} />
       <View style={styles.boardContainer}>
         <Background />
         <AiMoveHighlight lastAiMove={lastAiMove} />
@@ -294,7 +344,15 @@ function BoardInner({ gameMode, onBack }: BoardProps) {
         )}
       </View>
 
-      {/* FEN load modal */}
+      {gameMode === 'players' && (
+        <Clock
+          label="White"
+          seconds={whiteTimeSeconds}
+          isActive={turn === PIECE_COLOR.white}
+          isLow={whiteTimeSeconds < 60}
+        />
+      )}
+
       <Modal visible={showFenModal} transparent animationType="fade" onRequestClose={() => setShowFenModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>

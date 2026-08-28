@@ -5,6 +5,9 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
+
+#ifdef __ANDROID__
+
 #include <android/asset_manager.h>
 #include <android/log.h>
 
@@ -199,3 +202,15 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
     }
     return decodePoly(candidates.back().first);
 }
+
+#else
+
+bool openingBookLoad(const char * /*path*/) {
+    return false;
+}
+
+std::string openingBookProbe(const BoardSnapshot & /*snap*/) {
+    return "";
+}
+
+#endif

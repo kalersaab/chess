@@ -15,8 +15,13 @@
     "jsSrcsDir": "specs",
     "android": {
       "javaPackageName": "com.android.chess"
-    }
-  },
+    },
+  "ios": {
+        "modulesProvider": {
+          "NativeChessModule":  "NativeChessModuleProvider"
+        }
+     }
+    },
   "dependencies": {
     "@react-native/new-app-screen": "0.85.3",
     "react": "19.2.3",

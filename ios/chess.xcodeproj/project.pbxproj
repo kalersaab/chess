@@ -7,23 +7,116 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04F4806E06A6B5F607CADD38 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 88E93B889785A7D0AE82A7FB /* TranspositionTable.cpp */; };
+		05E4F093327CBF0DF0274302 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2BB0E7FEF34CE1F16F6E99E /* Perft.cpp */; };
+		061DD7802070EECD314E3193 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7847C3EC7256A2AE5AE3AB7C /* NativeChessModule.cpp */; };
+		07C808AE47E70707CDBE5767 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C1D732135A51DD4598B083F0 /* MoveGen.cpp */; };
 		0C80B921A6F3F58F76C31292 /* libPods-chess.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-chess.a */; };
+		0FAF66B1E92D848E4D141685 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 680E7B838020C8AF19469B40 /* OpeningBook.cpp */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		14FF75BE0406B856EC60F2B7 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B5CD09DC7633B5EE1D66D52 /* NativeChessModule.cpp */; };
+		19A21B339E7E20FF3C9970B1 /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6B11CF0115595FCA431519F /* Evaluation.cpp */; };
+		307CD38CD3134B3E93793CD6 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BB55539DE444ED3C641E0FBF /* Attacks.cpp */; };
+		3B0286BB723A2B867924B1BA /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 77863111020FAD2A65ACE74C /* Evaluation.cpp */; };
+		439C117AE23AF5FEEF22AE13 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5A51B94314779591C556E6D0 /* Search.cpp */; };
+		43FB71F899781B6A54997FE9 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A6055583FCEAF1A4C9431C28 /* Search.cpp */; };
+		4772A4A30A881891B1CC70CE /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB2EA6707E735B427DC6E208 /* OpeningBook.cpp */; };
+		496421F18FA7C02BCFE36D6B /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD6AD8D6088BA99EF208508 /* MoveGen.cpp */; };
+		4C4A85719C28ADDC39681EDC /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00C6570EDB6F89797F80CB7C /* Attacks.cpp */; };
+		51036C592BD48E3B004E042B /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A893483FDBA189C2572035D2 /* ChessEngine.cpp */; };
+		54E9F42AFA088052F61002FC /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9E44B466B0BEF77630F0A18C /* TranspositionTable.cpp */; };
+		56149894BDA527A23B5F7C28 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E406CAEDD5838C221EFA990A /* OpeningBook.cpp */; };
+		5F504BFDC80B7FAAE5ABD283 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1205EE3C6082B94F141EB717 /* MoveGen.cpp */; };
+		6175AFEAE5E337AA8A288B43 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73C25A2D2E64B914365E238B /* MoveGen.cpp */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
+		7FC639C6AE8A181F2E129571 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14ADAEB0CD9FFDA00AB47FD0 /* NativeChessModule.cpp */; };
+		81849B6485DA6E3B2E331720 /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEEB70AAF36B478387DFD731 /* Evaluation.cpp */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		85256B480E26B45AA0F9B426 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0DC4A10E7B8BFD17A3C0B7FF /* Search.cpp */; };
+		909DFD697DF3B528A12BD177 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF3CFAEDC5E3BDA2E77C3FBF /* TranspositionTable.cpp */; };
+		9FAD4353231D016FECDBBF79 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D702C85050D05658258C0A57 /* Perft.cpp */; };
+		9FAEAA58BE5AA3790105E0FB /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3B3881E45F51CECB9191B4C /* ChessEngine.cpp */; };
+		A19EB583340DBFDB4AC0A0BB /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 11825715A192AE9598A1E860 /* Perft.cpp */; };
+		A1C730DA7C10DB33334A0697 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 044ED0AE0418129C989F2902 /* NativeChessModule.cpp */; };
+		A7D04EC4B9444376C2173508 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27F36F45435D2EE93AF15E62 /* NativeChessModule.cpp */; };
+		AAC82715596404023F5CEC31 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE63155C2B9FD1BD21A0A40E /* TranspositionTable.cpp */; };
+		AF62EED678D2485401327BD5 /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 041102D0CC2D8DA526DC743A /* NativeChessModuleProvider.mm */; };
+		B1C2CBFC8D1BFC9E0F3D1FFE /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A029566CF8161CB87DBD6266 /* Evaluation.cpp */; };
+		B541DB3ACF22CF12C41A2D59 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		BB677A7F21676ABAA6AE25FB /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BB25BEE9228E6B4C7BC5DA62 /* Perft.cpp */; };
+		C20DE7637F8077A3361C7E99 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3DFB72A1E6FA06CCFCA1BAAD /* Attacks.cpp */; };
+		C45C9E527CFF5479C0ED64C5 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F69B163300FCA11D6D5726F4 /* OpeningBook.cpp */; };
+		C56914E1166946C3A22D14E7 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C85BB1A906874D3DEB75E1F8 /* Attacks.cpp */; };
+		CE0F318356075305C9F1ECA3 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F8AECFEF02B40354A05E2CF /* Search.cpp */; };
+		D1B927D6E8A5F605C5A5577D /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4039D6276AB80E95EC638174 /* ChessEngine.cpp */; };
+		DA4639767BB38B28039EFF18 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C80391D41846AD64C16591E8 /* Perft.cpp */; };
+		DEA39341D76FC3C82877D19F /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0908738735F9311B047C43EA /* Evaluation.cpp */; };
+		E0ED535EE3C91A9C7E6EB6AB /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FD7B7E8F38A043B4CF876131 /* Attacks.cpp */; };
+		EBBF50F0C358BCB5D5F39EA8 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B22275611474BC5CBD547FD7 /* TranspositionTable.cpp */; };
+		EFDD49AC6818B09A4606B484 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 31DD6CD3FE91EE764E36355A /* ChessEngine.cpp */; };
+		F1706122C21E4D31F751BE83 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A743A2B5014B472AC087F9ED /* MoveGen.cpp */; };
+		F52231A1623F545D1D3C9BD2 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 18EB45F2928F5101D561F6C2 /* ChessEngine.cpp */; };
+		F54C61145E1A78DBC87E6C70 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA680B371BF61290E5A6AF22 /* Search.cpp */; };
+		F7061199F96D4390F8885125 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9E1B0F8F520713E1BAE3BA0E /* OpeningBook.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00C6570EDB6F89797F80CB7C /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		041102D0CC2D8DA526DC743A /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
+		044ED0AE0418129C989F2902 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		0908738735F9311B047C43EA /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
+		0DC4A10E7B8BFD17A3C0B7FF /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		11825715A192AE9598A1E860 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
+		1205EE3C6082B94F141EB717 /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = chess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = chess/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = chess/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = chess/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		14ADAEB0CD9FFDA00AB47FD0 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		18EB45F2928F5101D561F6C2 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
+		27F36F45435D2EE93AF15E62 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		31DD6CD3FE91EE764E36355A /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-chess.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-chess.debug.xcconfig"; path = "Target Support Files/Pods-chess/Pods-chess.debug.xcconfig"; sourceTree = "<group>"; };
+		3DFB72A1E6FA06CCFCA1BAAD /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		4039D6276AB80E95EC638174 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-chess.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-chess.release.xcconfig"; path = "Target Support Files/Pods-chess/Pods-chess.release.xcconfig"; sourceTree = "<group>"; };
+		5A51B94314779591C556E6D0 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-chess.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-chess.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		680E7B838020C8AF19469B40 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		6B5CD09DC7633B5EE1D66D52 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		6FD6AD8D6088BA99EF208508 /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
+		73C25A2D2E64B914365E238B /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = chess/AppDelegate.swift; sourceTree = "<group>"; };
+		77863111020FAD2A65ACE74C /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
+		7847C3EC7256A2AE5AE3AB7C /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = chess/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		88E93B889785A7D0AE82A7FB /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		9E1B0F8F520713E1BAE3BA0E /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		9E44B466B0BEF77630F0A18C /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		9F8AECFEF02B40354A05E2CF /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		A029566CF8161CB87DBD6266 /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
+		A6055583FCEAF1A4C9431C28 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		A743A2B5014B472AC087F9ED /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
+		A893483FDBA189C2572035D2 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
+		AA680B371BF61290E5A6AF22 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		B22275611474BC5CBD547FD7 /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		BB25BEE9228E6B4C7BC5DA62 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
+		BB55539DE444ED3C641E0FBF /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		BE63155C2B9FD1BD21A0A40E /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		BEEB70AAF36B478387DFD731 /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
+		C1D732135A51DD4598B083F0 /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
+		C80391D41846AD64C16591E8 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
+		C85BB1A906874D3DEB75E1F8 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		D702C85050D05658258C0A57 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
+		DB2EA6707E735B427DC6E208 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		DF3CFAEDC5E3BDA2E77C3FBF /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		E2BB0E7FEF34CE1F16F6E99E /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
+		E3B3881E45F51CECB9191B4C /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
+		E406CAEDD5838C221EFA990A /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		E6B11CF0115595FCA431519F /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F69B163300FCA11D6D5726F4 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		FD7B7E8F38A043B4CF876131 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +167,52 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				044ED0AE0418129C989F2902 /* NativeChessModule.cpp */,
+				FD7B7E8F38A043B4CF876131 /* Attacks.cpp */,
+				B22275611474BC5CBD547FD7 /* TranspositionTable.cpp */,
+				BB25BEE9228E6B4C7BC5DA62 /* Perft.cpp */,
+				F69B163300FCA11D6D5726F4 /* OpeningBook.cpp */,
+				9F8AECFEF02B40354A05E2CF /* Search.cpp */,
+				A893483FDBA189C2572035D2 /* ChessEngine.cpp */,
+				73C25A2D2E64B914365E238B /* MoveGen.cpp */,
+				77863111020FAD2A65ACE74C /* Evaluation.cpp */,
+				27F36F45435D2EE93AF15E62 /* NativeChessModule.cpp */,
+				C85BB1A906874D3DEB75E1F8 /* Attacks.cpp */,
+				BE63155C2B9FD1BD21A0A40E /* TranspositionTable.cpp */,
+				11825715A192AE9598A1E860 /* Perft.cpp */,
+				9E1B0F8F520713E1BAE3BA0E /* OpeningBook.cpp */,
+				5A51B94314779591C556E6D0 /* Search.cpp */,
+				E3B3881E45F51CECB9191B4C /* ChessEngine.cpp */,
+				1205EE3C6082B94F141EB717 /* MoveGen.cpp */,
+				BEEB70AAF36B478387DFD731 /* Evaluation.cpp */,
+				7847C3EC7256A2AE5AE3AB7C /* NativeChessModule.cpp */,
+				00C6570EDB6F89797F80CB7C /* Attacks.cpp */,
+				DF3CFAEDC5E3BDA2E77C3FBF /* TranspositionTable.cpp */,
+				D702C85050D05658258C0A57 /* Perft.cpp */,
+				DB2EA6707E735B427DC6E208 /* OpeningBook.cpp */,
+				0DC4A10E7B8BFD17A3C0B7FF /* Search.cpp */,
+				4039D6276AB80E95EC638174 /* ChessEngine.cpp */,
+				A743A2B5014B472AC087F9ED /* MoveGen.cpp */,
+				E6B11CF0115595FCA431519F /* Evaluation.cpp */,
+				14ADAEB0CD9FFDA00AB47FD0 /* NativeChessModule.cpp */,
+				3DFB72A1E6FA06CCFCA1BAAD /* Attacks.cpp */,
+				88E93B889785A7D0AE82A7FB /* TranspositionTable.cpp */,
+				E2BB0E7FEF34CE1F16F6E99E /* Perft.cpp */,
+				E406CAEDD5838C221EFA990A /* OpeningBook.cpp */,
+				AA680B371BF61290E5A6AF22 /* Search.cpp */,
+				18EB45F2928F5101D561F6C2 /* ChessEngine.cpp */,
+				C1D732135A51DD4598B083F0 /* MoveGen.cpp */,
+				A029566CF8161CB87DBD6266 /* Evaluation.cpp */,
+						6B5CD09DC7633B5EE1D66D52 /* NativeChessModule.cpp */,
+				BB55539DE444ED3C641E0FBF /* Attacks.cpp */,
+				9E44B466B0BEF77630F0A18C /* TranspositionTable.cpp */,
+				C80391D41846AD64C16591E8 /* Perft.cpp */,
+				680E7B838020C8AF19469B40 /* OpeningBook.cpp */,
+				A6055583FCEAF1A4C9431C28 /* Search.cpp */,
+				31DD6CD3FE91EE764E36355A /* ChessEngine.cpp */,
+				6FD6AD8D6088BA99EF208508 /* MoveGen.cpp */,
+				0908738735F9311B047C43EA /* Evaluation.cpp */,
+				041102D0CC2D8DA526DC743A /* NativeChessModuleProvider.mm */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -159,6 +298,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				B541DB3ACF22CF12C41A2D59 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +385,52 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				A1C730DA7C10DB33334A0697 /* NativeChessModule.cpp in Sources */,
+				E0ED535EE3C91A9C7E6EB6AB /* Attacks.cpp in Sources */,
+				EBBF50F0C358BCB5D5F39EA8 /* TranspositionTable.cpp in Sources */,
+				BB677A7F21676ABAA6AE25FB /* Perft.cpp in Sources */,
+				C45C9E527CFF5479C0ED64C5 /* OpeningBook.cpp in Sources */,
+				CE0F318356075305C9F1ECA3 /* Search.cpp in Sources */,
+				51036C592BD48E3B004E042B /* ChessEngine.cpp in Sources */,
+				6175AFEAE5E337AA8A288B43 /* MoveGen.cpp in Sources */,
+				3B0286BB723A2B867924B1BA /* Evaluation.cpp in Sources */,
+				A7D04EC4B9444376C2173508 /* NativeChessModule.cpp in Sources */,
+				C56914E1166946C3A22D14E7 /* Attacks.cpp in Sources */,
+				AAC82715596404023F5CEC31 /* TranspositionTable.cpp in Sources */,
+				A19EB583340DBFDB4AC0A0BB /* Perft.cpp in Sources */,
+				F7061199F96D4390F8885125 /* OpeningBook.cpp in Sources */,
+				439C117AE23AF5FEEF22AE13 /* Search.cpp in Sources */,
+				9FAEAA58BE5AA3790105E0FB /* ChessEngine.cpp in Sources */,
+				5F504BFDC80B7FAAE5ABD283 /* MoveGen.cpp in Sources */,
+				81849B6485DA6E3B2E331720 /* Evaluation.cpp in Sources */,
+				061DD7802070EECD314E3193 /* NativeChessModule.cpp in Sources */,
+				4C4A85719C28ADDC39681EDC /* Attacks.cpp in Sources */,
+				909DFD697DF3B528A12BD177 /* TranspositionTable.cpp in Sources */,
+				9FAD4353231D016FECDBBF79 /* Perft.cpp in Sources */,
+				4772A4A30A881891B1CC70CE /* OpeningBook.cpp in Sources */,
+				85256B480E26B45AA0F9B426 /* Search.cpp in Sources */,
+				D1B927D6E8A5F605C5A5577D /* ChessEngine.cpp in Sources */,
+				F1706122C21E4D31F751BE83 /* MoveGen.cpp in Sources */,
+				19A21B339E7E20FF3C9970B1 /* Evaluation.cpp in Sources */,
+				7FC639C6AE8A181F2E129571 /* NativeChessModule.cpp in Sources */,
+				C20DE7637F8077A3361C7E99 /* Attacks.cpp in Sources */,
+				04F4806E06A6B5F607CADD38 /* TranspositionTable.cpp in Sources */,
+				05E4F093327CBF0DF0274302 /* Perft.cpp in Sources */,
+				56149894BDA527A23B5F7C28 /* OpeningBook.cpp in Sources */,
+				F54C61145E1A78DBC87E6C70 /* Search.cpp in Sources */,
+				F52231A1623F545D1D3C9BD2 /* ChessEngine.cpp in Sources */,
+				07C808AE47E70707CDBE5767 /* MoveGen.cpp in Sources */,
+				B1C2CBFC8D1BFC9E0F3D1FFE /* Evaluation.cpp in Sources */,
+						14FF75BE0406B856EC60F2B7 /* NativeChessModule.cpp in Sources */,
+				307CD38CD3134B3E93793CD6 /* Attacks.cpp in Sources */,
+				54E9F42AFA088052F61002FC /* TranspositionTable.cpp in Sources */,
+				DA4639767BB38B28039EFF18 /* Perft.cpp in Sources */,
+				0FAF66B1E92D848E4D141685 /* OpeningBook.cpp in Sources */,
+				43FB71F899781B6A54997FE9 /* Search.cpp in Sources */,
+				EFDD49AC6818B09A4606B484 /* ChessEngine.cpp in Sources */,
+				496421F18FA7C02BCFE36D6B /* MoveGen.cpp in Sources */,
+				DEA39341D76FC3C82877D19F /* Evaluation.cpp in Sources */,
+				AF62EED678D2485401327BD5 /* NativeChessModuleProvider.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,11 +442,20 @@
 			baseConfigurationReference = 3B4392A12AC88292D35C810B /* Pods-chess.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "$(inherited)";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"/Users/gurwindersingh/Documents/chess/ios/../shared\"",
+					"\"/Users/gurwindersingh/Documents/chess/ios/../shared/chess\"",
+					"\"/Users/gurwindersingh/Documents/chess/ios/build/generated/ios/ReactCodegen\"",
+				);
 				INFOPLIST_FILE = chess/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -272,6 +467,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.chess;
 				PRODUCT_NAME = chess;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -284,10 +480,19 @@
 			baseConfigurationReference = 5709B34CF0A7D63546082F79 /* Pods-chess.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LANGUAGE_STANDARD = "$(inherited)";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"/Users/gurwindersingh/Documents/chess/ios/../shared\"",
+					"\"/Users/gurwindersingh/Documents/chess/ios/../shared/chess\"",
+					"\"/Users/gurwindersingh/Documents/chess/ios/build/generated/ios/ReactCodegen\"",
+				);
 				INFOPLIST_FILE = chess/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -299,6 +504,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.chess;
 				PRODUCT_NAME = chess;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -366,6 +572,10 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -373,8 +583,13 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -431,6 +646,10 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -438,8 +657,12 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

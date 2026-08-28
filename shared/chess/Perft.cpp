@@ -1,7 +1,15 @@
 #include "Perft.h"
 #include "MoveGen.h"
 #include <cstdlib>
+#ifdef __ANDROID__
 #include <android/log.h>
+#define PERFT_LOG(tag, fmt, ...) __android_log_print(ANDROID_LOG_INFO, tag, fmt, ##__VA_ARGS__)
+#define PERFT_LOGE(tag, fmt, ...) __android_log_print(ANDROID_LOG_ERROR, tag, fmt, ##__VA_ARGS__)
+#else
+#include <cstdio>
+#define PERFT_LOG(tag, fmt, ...) fprintf(stdout, "[%s] " fmt "\n", tag, ##__VA_ARGS__)
+#define PERFT_LOGE(tag, fmt, ...) fprintf(stderr, "[%s] " fmt "\n", tag, ##__VA_ARGS__)
+#endif
 
 static void applyPerft(BoardSnapshot &snap, const Move &m, UndoRecord &undo) {
     uint8_t *bd    = snap.bd;
@@ -115,13 +123,12 @@ void perftSuite(BoardSnapshot &snap) {
     for (const auto &c : cases) {
         uint64_t got  = perft(snap, c.depth);
         bool     pass = (got == c.expected);
-        __android_log_print(
-            pass ? ANDROID_LOG_INFO : ANDROID_LOG_ERROR,
-            "Perft",
-            "depth %d: expected %llu got %llu  [%s]",
-            c.depth,
-            (unsigned long long)c.expected,
-            (unsigned long long)got,
-            pass ? "PASS" : "FAIL");
+        if (pass) {
+            PERFT_LOG("Perft", "depth %d: expected %llu got %llu  [PASS]",
+                c.depth, (unsigned long long)c.expected, (unsigned long long)got);
+        } else {
+            PERFT_LOGE("Perft", "depth %d: expected %llu got %llu  [FAIL]",
+                c.depth, (unsigned long long)c.expected, (unsigned long long)got);
+        }
     }
 }

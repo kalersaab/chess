@@ -1,5 +1,9 @@
-import { ImageSourcePropType } from "react-native";
-import { SIZE } from "../screen/pieces";
+import { ImageSourcePropType, Dimensions } from "react-native";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+export const BOARD_SIZE = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT, 560);
+export const SIZE = BOARD_SIZE / 8;
 
 type Player = "b" | "w";
 type Type = "q" | "r" | "n" | "b" | "k" | "p"| "Q" | "R" | "N" | "B" | "K" | "P";

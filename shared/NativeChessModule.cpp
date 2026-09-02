@@ -6,6 +6,9 @@ namespace facebook::react {
 NativeChessModule::NativeChessModule(std::shared_ptr<CallInvoker> jsInvoker)
     : NativeChessModuleCxxSpec(std::move(jsInvoker)) {
     engine = std::make_unique<ChessEngine>();
+#ifdef __APPLE__
+    SoundEngine::init();
+#endif
 }
 
 jsi::Array NativeChessModule::getBoard(jsi::Runtime &rt) {
@@ -87,5 +90,9 @@ bool        NativeChessModule::loadFEN(jsi::Runtime &, std::string fen) { return
 std::string NativeChessModule::getPGN(jsi::Runtime &) { return engine->getPGN(); }
 bool        NativeChessModule::loadPGN(jsi::Runtime &, std::string pgn) { return engine->loadPGN(pgn); }
 bool        NativeChessModule::goToMove(jsi::Runtime &, int index) { return engine->goToMove(index); }
+
+void        NativeChessModule::playSound(jsi::Runtime &, std::string name) {
+    SoundEngine::play(name);
+}
 
 }

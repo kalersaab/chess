@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "ChessEngine.h"
+#include "SoundEngine.h"
 
 namespace facebook::react {
 
@@ -30,6 +31,7 @@ public:
     std::string  getPGN(jsi::Runtime &rt);
     bool         loadPGN(jsi::Runtime &rt, std::string pgn);
     bool         goToMove(jsi::Runtime &rt, int index);
+    void         playSound(jsi::Runtime &rt, std::string name);
 
 private:
     std::unique_ptr<ChessEngine> engine;

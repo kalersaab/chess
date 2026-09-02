@@ -17,6 +17,7 @@ export interface Spec extends TurboModule {
   getPGN(): string;
   loadPGN(pgn: string): boolean;
   goToMove(index: number): boolean;
+  playSound(name: string): void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

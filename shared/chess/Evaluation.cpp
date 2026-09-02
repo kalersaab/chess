@@ -167,6 +167,7 @@ int evaluatePassedPawns(const BoardSnapshot &snap) {
                 if (!isEnemyPawn) continue;
                 
                 int enemyPawnRank = pieceIsWhite(checkPiece) ? checkRow : (7 - checkRow);
+                (void)enemyPawnRank;
 
                 if (isWhitePawn && checkRow <= row) {
                     isPassed = false;

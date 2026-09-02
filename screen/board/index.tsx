@@ -18,12 +18,12 @@ import Piece from '../pieces';
 import MoveHighlights from '../MoveHighlights';
 import Clock from '../clock';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
-import { PIECES } from '../../utils';
+import { PIECES, BOARD_SIZE, SIZE } from '../../utils';
 import { SelectionProvider, useSelection } from '../../context';
 import { BoardProps } from '../../interface';
 
-const { width } = Dimensions.get('window');
-const CELL_SIZE = width / 8;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CELL_SIZE = SIZE;
 const COMPUTER_DEPTH = 4;
 
 const squareToStyle = (sq: string) => {
@@ -150,6 +150,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
 
       if (!timeRemains) {
         setGameOver(true);
+        NativeChessModule.playSound('game_end');
         const winner = isWhiteTurn ? 'Black' : 'White';
         const loser = isWhiteTurn ? 'White' : 'Black';
         Alert.alert('Time\'s up!', `${loser} ran out of time. ${winner} wins!`);
@@ -174,13 +175,30 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
       try {
         const bestMove = await NativeChessModule.getBestMove(false, COMPUTER_DEPTH);
         if (bestMove) {
+          const boardBefore = board;
           const result = await NativeChessModule.makeMove(bestMove);
           setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
           if (result === CHECK_STATUS.checkmate) {
+            NativeChessModule.playSound('victory');
             refreshBoard();
             setGameOver(true);
             Alert.alert('Checkmate', 'Computer wins!');
           } else {
+            const from = bestMove.slice(0, 2);
+            const to   = bestMove.slice(2, 4);
+            const isCastle =
+              (from === 'e1' && (to === 'g1' || to === 'c1')) ||
+              (from === 'e8' && (to === 'g8' || to === 'c8'));
+            if (isCastle) {
+              NativeChessModule.playSound('castle');
+            } else {
+              const toX = to.charCodeAt(0) - 97;
+              const toY = 8 - parseInt(to[1], 10);
+              const wasOccupied = !!(boardBefore[toY]?.[toX]);
+              if (result === CHECK_STATUS.check)  NativeChessModule.playSound('check');
+              else if (wasOccupied)               NativeChessModule.playSound('capture');
+              else                                NativeChessModule.playSound('move');
+            }
             refreshBoard();
           }
         }
@@ -195,6 +213,9 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
     if (!pendingPromotion) return;
     const result = await NativeChessModule.makeMove(pendingPromotion.move + piece);
     if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
+      if (result === CHECK_STATUS.checkmate) NativeChessModule.playSound('victory');
+      else if (result === CHECK_STATUS.check) NativeChessModule.playSound('check');
+      else NativeChessModule.playSound('move');
       refreshBoard();
       if (result === CHECK_STATUS.checkmate) Alert.alert('Checkmate');
     }
@@ -393,7 +414,7 @@ export default function Board({ gameMode, onBack }: BoardProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    width,
+    width: SCREEN_WIDTH,
     alignItems: 'stretch',
   },
   headerBar: {
@@ -478,8 +499,9 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   boardContainer: {
-    width,
-    height: width,
+    width: BOARD_SIZE,
+    height: BOARD_SIZE,
+    alignSelf: 'center',
   },
   promoModal: {
     flexDirection: 'row',

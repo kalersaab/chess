@@ -6,9 +6,6 @@ const Clock = ({ label, seconds, isActive, isLow }: ClockProps) =>{
   return (
     <View style={[styles.clockBox, isActive && styles.clockBoxActive]}>
       <View style={styles.clockInner}>
-        <View style={styles.clockDot}>
-          <View style={[styles.colorDot, label === 'White' ? styles.colorDotWhite : styles.colorDotBlack]} />
-        </View>
         <View style={styles.clockTextGroup}>
           <Text style={[styles.clockLabel, isActive && styles.clockLabelActive]}>{label}</Text>
           <Text
@@ -21,49 +18,24 @@ const Clock = ({ label, seconds, isActive, isLow }: ClockProps) =>{
             {formatTime(seconds)}
           </Text>
         </View>
-        {isActive && <View style={styles.activeIndicator} />}
       </View>
     </View>
   );
 }
 export default Clock;
 const styles = StyleSheet.create({
-    clockBox: {
+  clockBox: {
     height: CLOCK_HEIGHT,
-    marginHorizontal: 12,
-    marginVertical: 8,
-    borderRadius: 12,
-    backgroundColor: '#2b2a27',
-    justifyContent: 'center',
+    width: '100%',
     paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#3a3936',
+    justifyContent: 'center',
   },
-  clockBoxActive: {
-    backgroundColor: '#f0d9b5',
-    borderColor: '#c9a84c',
-  },
+  clockBoxActive: {},
   clockInner: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  clockDot: {
-    marginRight: 12,
-  },
-  colorDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-  },
-  colorDotWhite: {
-    backgroundColor: '#ffffff',
-    borderColor: '#aaa',
-  },
-  colorDotBlack: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
-  },
+
   clockTextGroup: {
     flex: 1,
   },
@@ -76,7 +48,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   clockLabelActive: {
-    color: '#6b4f1a',
+    color: '#c9a84c',
   },
   clockText: {
     color: '#ccc',
@@ -86,15 +58,10 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   clockTextActive: {
-    color: '#1a1a1a',
+    color: '#f0d9b5',
   },
   clockTextLow: {
     color: '#e74c3c',
   },
-  activeIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#c9a84c',
-  },
+
 })

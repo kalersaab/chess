@@ -7,9 +7,10 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { PIECES } from '../../utils';
+import { PIECES, BOARD_SIZE } from '../../utils';
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CONTENT_WIDTH = Math.min(SCREEN_WIDTH - 40, 520);
 
 export type GameMode = 'players' | 'computer';
 
@@ -110,7 +111,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
   );
 }
 
-const CARD_WIDTH = width - 40;
+const CARD_WIDTH = CONTENT_WIDTH;
 
 const styles = StyleSheet.create({
   container: {
@@ -244,8 +245,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   boardCell: {
-    width: width / 8,
-    height: width / 8,
+    width: BOARD_SIZE / 8,
+    height: BOARD_SIZE / 8,
   },
   lightCell: {
     backgroundColor: '#f0d9b5',

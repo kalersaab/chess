@@ -1,7 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import {
   Image,
-  Dimensions,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -12,18 +11,33 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { PIECES, positionToSquare } from '../../utils';
+import { PIECES, positionToSquare, SIZE } from '../../utils';
 import NativeChessModule from '../../specs/NativeChessModule';
 import { scheduleOnRN } from 'react-native-worklets';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
 import { PieceProps } from '../../interface';
 import { useSelection } from '../../context';
 
-const { width } = Dimensions.get('window');
-export const SIZE = width / 8;
+export { SIZE } from '../../utils';
 
 const colToLetter = (x: number) => String.fromCharCode(97 + x);
 const posToSquare = (x: number, y: number) => `${colToLetter(x)}${8 - y}`;
+
+const playMoveSound = (result: string, move: string, boardSnapshot: string[][]) => {
+  if (result === CHECK_STATUS.checkmate) { NativeChessModule.playSound('victory'); return; }
+  const from = move.slice(0, 2);
+  const to   = move.slice(2, 4);
+  const isCastle =
+    (from === 'e1' && (to === 'g1' || to === 'c1')) ||
+    (from === 'e8' && (to === 'g8' || to === 'c8'));
+  if (isCastle) { NativeChessModule.playSound('castle'); return; }
+  const toX = to.charCodeAt(0) - 97;
+  const toY = 8 - parseInt(to[1], 10);
+  const wasOccupied = !!(boardSnapshot[toY]?.[toX]);
+  if (result === CHECK_STATUS.check)  { NativeChessModule.playSound('check');   return; }
+  if (wasOccupied)                    { NativeChessModule.playSound('capture'); return; }
+  NativeChessModule.playSound('move');
+};
 
 const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
   const translateX = useSharedValue(position.x * SIZE);
@@ -66,6 +80,7 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     const runMove = async () => {
       const result = await NativeChessModule.makeMove(`${mySquare}${toSq}`);
       if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
+        playMoveSound(result, `${mySquare}${toSq}`, board);
         translateX.value = withTiming(toX * SIZE, { duration: 200 });
         translateY.value = withTiming(toY * SIZE, { duration: 200 });
         const isCheckmate = result === CHECK_STATUS.checkmate;
@@ -85,6 +100,7 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     }
     const result = await NativeChessModule.makeMove(move);
     if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
+      playMoveSound(result, move, board);
       translateX.value = withTiming(toX * SIZE, { duration: 200 });
       translateY.value = withTiming(toY * SIZE, { duration: 200 });
       const isCheckmate = result === CHECK_STATUS.checkmate;
@@ -131,6 +147,7 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     }
     const result = await NativeChessModule.makeMove(move);
     if (result === 'valid' || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
+      playMoveSound(result, move, board);
       translateX.value = withTiming(newX * SIZE);
       translateY.value = withTiming(newY * SIZE);
       const isCheckmate = result === CHECK_STATUS.checkmate;
@@ -146,6 +163,7 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
     const moveWithPromotion = promotion!.move + promotionPiece;
     const result = await NativeChessModule.makeMove(moveWithPromotion);
     if (result === 'valid' || result === CHECK_STATUS.checkmate) {
+      playMoveSound(result, moveWithPromotion, board);
       translateX.value = withTiming(promotion!.newX * SIZE);
       translateY.value = withTiming(promotion!.newY * SIZE);
       onMoveEnd();

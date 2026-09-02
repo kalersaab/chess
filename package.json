@@ -16,12 +16,12 @@
     "android": {
       "javaPackageName": "com.android.chess"
     },
-  "ios": {
-        "modulesProvider": {
-          "NativeChessModule":  "NativeChessModuleProvider"
-        }
-     }
-    },
+    "ios": {
+      "modulesProvider": {
+        "NativeChessModule": "NativeChessModuleProvider"
+      }
+    }
+  },
   "dependencies": {
     "@react-native/new-app-screen": "0.85.3",
     "react": "19.2.3",
@@ -60,25 +60,25 @@
     "url": "https://github.com/kalersaab/chess.git"
   },
   "keywords": [
-  "chess",
-  "chess-engine",
-  "chess-ai",
-  "uci",
-  "uci-engine",
-  "stockfish",
-  "engine",
-  "chess-analysis",
-  "chess-moves",
-  "chess-game",
-  "fen",
-  "pgn",
-  "chessboard",
-  "chess-library",
-  "javascript",
-  "typescript",
-  "nodejs",
-  "browser",
-  "webassembly",
-  "wasm"
-]
+    "chess",
+    "chess-engine",
+    "chess-ai",
+    "uci",
+    "uci-engine",
+    "stockfish",
+    "engine",
+    "chess-analysis",
+    "chess-moves",
+    "chess-game",
+    "fen",
+    "pgn",
+    "chessboard",
+    "chess-library",
+    "javascript",
+    "typescript",
+    "nodejs",
+    "browser",
+    "webassembly",
+    "wasm"
+  ]
 }

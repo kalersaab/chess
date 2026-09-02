@@ -9,6 +9,7 @@ include(${REACT_ANDROID_DIR}/cmake-utils/ReactNative-application.cmake)
 # Define where the additional source code lives. We need to crawl back the jni, main, src, app, android folders
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE 
 ../../../../../shared/NativeChessModule.cpp
+../../../../../shared/SoundEngine_android.cpp
 ../../../../../shared/chess/ChessEngine.cpp
 ../../../../../shared/chess/Attacks.cpp
 ../../../../../shared/chess/Evaluation.cpp
@@ -23,4 +24,4 @@ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
 ../../../../../shared
 ../../../../../shared/chess)
 
-target_link_libraries(${CMAKE_PROJECT_NAME} log android)
+target_link_libraries(${CMAKE_PROJECT_NAME} log android aaudio mediandk)

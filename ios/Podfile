@@ -23,9 +23,6 @@ target 'chess' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # ── Chess engine + NativeChessModule (C++ TurboModule) ──────────────────────
-  # Compile all shared/ C++ sources + our iOS registration .mm into the app
-  # target, exactly as CMakeLists.txt does for Android.
   shared_dir = "#{Pod::Config.instance.installation_root}/../shared"
   ios_src_dir = "#{Pod::Config.instance.installation_root}/../ios/chess"
 
@@ -36,7 +33,6 @@ target 'chess' do
   chess_headers = [
     "#{shared_dir}",
     "#{shared_dir}/chess",
-    # Generated codegen headers (ChessSpecsJSI.h lives here)
     "#{Pod::Config.instance.installation_root}/build/generated/ios/ReactCodegen",
   ]
 
@@ -48,27 +44,38 @@ target 'chess' do
       # :ccache_enabled => true
     )
 
-    # Add shared C++ sources and header paths to the app target.
     installer.aggregate_targets.each do |agg|
       agg.user_project.targets.each do |t|
         next unless t.name == 'chess'
 
-        # Header search paths — prepend $(inherited) so we stack on top of pods xcconfig
-        t.build_configurations.each do |bc|
+          t.build_configurations.each do |bc|
           inherited_paths = ['$(inherited)'] + chess_headers.map { |p| "\"#{p}\"" }
           bc.build_settings['HEADER_SEARCH_PATHS'] = inherited_paths.join(' ')
           bc.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = '$(inherited)'
           bc.build_settings['CLANG_CXX_LIBRARY'] = 'libc++'
-          # Allow C++ exceptions (used by JSI)
           bc.build_settings['GCC_ENABLE_CPP_EXCEPTIONS'] = 'YES'
+          # Append AVFoundation while preserving xcconfig-inherited flags
+          bc.build_settings['OTHER_LDFLAGS'] = '$(inherited) -framework AVFoundation'
         end
 
-        # Source files — add each .cpp as a PBXBuildFile if not already present
+        # Source files — add each .cpp/.mm as a PBXBuildFile if not already present
         sources_phase = t.source_build_phase
         chess_sources.each do |src_path|
           next if sources_phase.files.any? { |f| f.file_ref&.real_path&.to_s == src_path }
           file_ref = t.project.new_file(src_path)
           sources_phase.add_file_reference(file_ref, true)
+        end
+
+        # Copy MP3 sound assets into the app bundle (Resources)
+        sound_dir = "#{Pod::Config.instance.installation_root}/../assets/sounds"
+        mp3_files = Dir.glob("#{sound_dir}/*.mp3")
+
+        # Find or create a "Copy Files" resources phase
+        resources_phase = t.resources_build_phase
+        mp3_files.each do |mp3_path|
+          next if resources_phase.files.any? { |f| f.file_ref&.real_path&.to_s == mp3_path }
+          file_ref = t.project.new_file(mp3_path)
+          resources_phase.add_file_reference(file_ref, true)
         end
 
         t.project.save

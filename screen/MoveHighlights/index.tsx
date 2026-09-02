@@ -1,10 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { PIECE_COLOR, PIECE_TYPE } from '../../helper';
 import { useSelection } from '../../context';
-
-const { width } = Dimensions.get('window');
-const SIZE = width / 8;
+import { SIZE } from '../../utils';
 
 interface Props {
   onSquareTap: (toSquare: string) => void;

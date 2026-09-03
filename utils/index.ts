@@ -39,3 +39,15 @@ export const formatTime = (seconds: number) => {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
+
+export type DifficultyLevel = 'easy' | 'normal' | 'hard';
+
+export const DIFFICULTY_LEVELS: Record<DifficultyLevel, { label: string; depth: number }> = {
+  easy: { label: 'Easy', depth: 2 },
+  normal: { label: 'Normal', depth: 4 },
+  hard: { label: 'Hard', depth: 6 },
+};
+
+export const getDifficultyDepth = (level: DifficultyLevel): number => {
+  return DIFFICULTY_LEVELS[level].depth;
+};

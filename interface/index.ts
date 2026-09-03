@@ -1,6 +1,6 @@
 import { PIECE_COLOR, PIECE_TYPE } from "../helper";
 import { GameMode } from "../screen/Home";
-import { PIECES } from "../utils";
+import { PIECES, DifficultyLevel } from "../utils";
 
 export interface HighlightSquare {
   x: number;
@@ -45,5 +45,6 @@ export interface BoardProps {
   gameMode: GameMode;
   onBack: () => void;
   initialTimeSeconds?: number;
+  difficulty?: DifficultyLevel;
 }
 

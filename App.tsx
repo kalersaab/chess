@@ -3,15 +3,20 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import HomeScreen, { GameMode } from './screen/Home';
 import Board from './screen/board';
+import { DifficultyLevel } from './utils';
 
 type Screen = 'home' | 'game';
 
 function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [gameMode, setGameMode] = useState<GameMode>('players');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('normal');
 
-  const handleStart = (mode: GameMode) => {
+  const handleStart = (mode: GameMode, selectedDifficulty?: DifficultyLevel) => {
     setGameMode(mode);
+    if (selectedDifficulty) {
+      setDifficulty(selectedDifficulty);
+    }
     setScreen('game');
   };
 
@@ -25,7 +30,7 @@ function App() {
         {screen === 'home' ? (
           <HomeScreen onStart={handleStart} />
         ) : (
-          <Board gameMode={gameMode} onBack={handleBack} />
+          <Board gameMode={gameMode} difficulty={difficulty} onBack={handleBack} />
         )}
       </View>
     </GestureHandlerRootView>

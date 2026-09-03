@@ -30,6 +30,8 @@
 		3B0286BB723A2B867924B1BA /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 77863111020FAD2A65ACE74C /* Evaluation.cpp */; };
 		3CDC6696DAD0EDC6F9A40396 /* victory.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 25D41E9A41113BA755CF9810 /* victory.mp3 */; };
 		4284AB7C311A65FEE9F3EA9C /* castle.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 704D51F03B4F1CC49275BA7B /* castle.mp3 */; };
+		FE1C2D3E4F5A6B7C8D9E0F1A /* performance.bin in Resources */ = {isa = PBXBuildFile; fileRef = FE0B1E2C3A4D5E6F7A8B9C0D /* performance.bin */; };
+		FE3D4E5F6A7B8C9D0E1F2A3B /* OpeningBook_iOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = FE2C3D4E5F6A7B8C9D0E1F2A /* OpeningBook_iOS.mm */; };
 		439C117AE23AF5FEEF22AE13 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5A51B94314779591C556E6D0 /* Search.cpp */; };
 		43FB71F899781B6A54997FE9 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A6055583FCEAF1A4C9431C28 /* Search.cpp */; };
 		4487C1E18D48E3694968CCDE /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C01E5E6C3075D7F8C6E9B1D0 /* Evaluation.cpp */; };
@@ -257,6 +259,8 @@
 		F829ED5E3DBF44F1BC4EE4F2 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
 		FD7B7E8F38A043B4CF876131 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 		FDC2E41A137E662DDACE8FB2 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		FE0B1E2C3A4D5E6F7A8B9C0D /* performance.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.binary; name = performance.bin; path = chess/performance.bin; sourceTree = "<group>"; };
+		FE2C3D4E5F6A7B8C9D0E1F2A /* OpeningBook_iOS.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; name = OpeningBook_iOS.mm; path = ../shared/chess/OpeningBook_iOS.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -521,6 +525,7 @@
 				61BE67D2ECFF70F8A116ED0D /* game_end.mp3 in Resources */,
 				ABC5FCE8C3FEB1A3E594D48D /* check.mp3 in Resources */,
 				4284AB7C311A65FEE9F3EA9C /* castle.mp3 in Resources */,
+				FE1C2D3E4F5A6B7C8D9E0F1A /* performance.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -702,6 +707,7 @@
 				52725583BFFF045A82F2A309 /* NativeChessModule.cpp in Sources */,
 				F1E7C697EE39CF6E9DE25ECE /* SoundEngine_ios.mm in Sources */,
 				5ACB1C702DB7A095290267C9 /* Attacks.cpp in Sources */,
+				FE3D4E5F6A7B8C9D0E1F2A3B /* OpeningBook_iOS.mm in Sources */,
 				D5C13723429FC96D36988B98 /* TranspositionTable.cpp in Sources */,
 				A9754CAC6179DBB7A88C5812 /* Perft.cpp in Sources */,
 				87A070B01B1C59DA2A9E54BC /* OpeningBook.cpp in Sources */,

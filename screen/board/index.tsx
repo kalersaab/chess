@@ -18,13 +18,12 @@ import Piece from '../pieces';
 import MoveHighlights from '../MoveHighlights';
 import Clock from '../clock';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
-import { PIECES, BOARD_SIZE, SIZE } from '../../utils';
+import { PIECES, BOARD_SIZE, SIZE, getDifficultyDepth, DIFFICULTY_LEVELS } from '../../utils';
 import { SelectionProvider, useSelection } from '../../context';
 import { BoardProps } from '../../interface';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CELL_SIZE = SIZE;
-const COMPUTER_DEPTH = 4;
 
 const squareToStyle = (sq: string) => {
   const x = sq.charCodeAt(0) - 97;
@@ -102,7 +101,7 @@ const MoveTable = ({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
   );
 };
 
-function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) {
+function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = 'normal' }: BoardProps) {
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
   const [turn, setTurn] = useState<PIECE_COLOR>(() => NativeChessModule.getTurn() as PIECE_COLOR);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
@@ -116,6 +115,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
   const [blackTimeSeconds, setBlackTimeSeconds] = useState(initialTimeSeconds);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerInitializedRef = useRef(false);
+  const computerDepth = getDifficultyDepth(difficulty);
 
   const { selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget } = useSelection();
   const [pendingPromotion, setPendingPromotion] = useState<{ move: string } | null>(null);
@@ -173,7 +173,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
 
     const task = InteractionManager.runAfterInteractions(async () => {
       try {
-        const bestMove = await NativeChessModule.getBestMove(false, COMPUTER_DEPTH);
+        const bestMove = await NativeChessModule.getBestMove(false, computerDepth);
         if (bestMove) {
           const boardBefore = board;
           const result = await NativeChessModule.makeMove(bestMove);
@@ -207,7 +207,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
     });
 
     return () => task.cancel();
-  }, [turn, gameMode, isComputerThinking, gameOver, refreshBoard]);
+  }, [turn, gameMode, isComputerThinking, gameOver, refreshBoard, computerDepth]);
 
   const finishPromotion = useCallback(async (piece: string) => {
     if (!pendingPromotion) return;
@@ -307,6 +307,11 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600 }: BoardProps) 
           <Text style={styles.headerTitle}>
             {gameMode === 'computer' ? 'vs Computer' : 'vs Player'}
           </Text>
+          {gameMode === 'computer' && (
+            <Text style={styles.difficultyIndicator}>
+              {DIFFICULTY_LEVELS[difficulty].label}
+            </Text>
+          )}
           {isComputerThinking && <Text style={styles.thinkingLabel}>thinking…</Text>}
         </View>
         <TouchableOpacity style={styles.headerBtn} onPress={() => { setFenInput(''); setShowFenModal(true); }}>
@@ -457,6 +462,12 @@ const styles = StyleSheet.create({
   },
   thinkingLabel: {
     color: '#c9a84c',
+    fontSize: 11,
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  difficultyIndicator: {
+    color: '#888',
     fontSize: 11,
     letterSpacing: 0.5,
     marginTop: 2,

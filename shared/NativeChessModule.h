@@ -32,6 +32,8 @@ public:
     bool         loadPGN(jsi::Runtime &rt, std::string pgn);
     bool         goToMove(jsi::Runtime &rt, int index);
     void         playSound(jsi::Runtime &rt, std::string name);
+    jsi::Object  getLastBookMoveInfo(jsi::Runtime &rt);
+    bool         hasBookMoves(jsi::Runtime &rt);
 
 private:
     std::unique_ptr<ChessEngine> engine;

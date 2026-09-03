@@ -116,6 +116,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerInitializedRef = useRef(false);
   const computerDepth = getDifficultyDepth(difficulty);
+  const [bookMoveInfo, setBookMoveInfo] = useState<any>(null);
 
   const { selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget } = useSelection();
   const [pendingPromotion, setPendingPromotion] = useState<{ move: string } | null>(null);
@@ -127,6 +128,12 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
     setMoves(parsed);
     setCurrentMoveIdx(parsed.length - 1);
     if (isCheckmate) setGameOver(true);
+    try {
+      const bookInfo = NativeChessModule.getLastBookMoveInfo();
+      setBookMoveInfo(bookInfo);
+    } catch (e) {
+      setBookMoveInfo(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -312,6 +319,14 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
               {DIFFICULTY_LEVELS[difficulty].label}
             </Text>
           )}
+          {bookMoveInfo && bookMoveInfo.isFromBook && (
+            <Text style={styles.bookIndicator}>
+              📚 Book ({Math.round((bookMoveInfo.weight / bookMoveInfo.totalWeight) * 100)}%)
+            </Text>
+          )}
+          {bookMoveInfo && !bookMoveInfo.isFromBook && (
+            <Text style={styles.searchIndicator}>🔍 Search</Text>
+          )}
           {isComputerThinking && <Text style={styles.thinkingLabel}>thinking…</Text>}
         </View>
         <TouchableOpacity style={styles.headerBtn} onPress={() => { setFenInput(''); setShowFenModal(true); }}>
@@ -472,7 +487,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
   },
-  // Move list (chess.com style horizontal strip)
+  bookIndicator: {
+    color: '#7fb069',
+    fontSize: 11,
+    letterSpacing: 0.5,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  searchIndicator: {
+    color: '#5a8fd1',
+    fontSize: 11,
+    letterSpacing: 0.5,
+    marginTop: 2,
+    fontWeight: '600',
+  },
   moveScroll: {
     backgroundColor: '#1e1d1b',
     borderTopWidth: 1,

@@ -24,6 +24,7 @@ public:
     bool        loadPGN(const std::string &pgn);
     bool        goToMove(int index);
     void        recordMove(const std::string &uci, const std::string &san);
+    BoardSnapshot getBoardSnapshot() const;
 
 private:
     BoardSnapshot snap;

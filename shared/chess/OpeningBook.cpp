@@ -36,6 +36,7 @@ struct PolyEntry { uint64_t key; uint16_t move; uint16_t weight; uint32_t learn;
 
 static std::vector<PolyEntry> gBook;
 static bool gLoaded = false;
+static BookMoveInfo gLastBookMove = {"", 0, 0, false};  // Track last book move
 
 static uint16_t bs16(uint16_t x) { return (uint16_t)((x>>8)|(x<<8)); }
 static uint64_t bs64(uint64_t x) { return __builtin_bswap64(x); }
@@ -92,27 +93,6 @@ static uint64_t polyHash(const BoardSnapshot &snap) {
     return h;
 }
 
-static BoardSnapshot makeStartingPosition() {
-    BoardSnapshot startSnap;
-    startSnap.board = {
-        {"r","n","b","q","k","b","n","r"},
-        {"p","p","p","p","p","p","p","p"},
-        {"","","","","","","",""},
-        {"","","","","","","",""},
-        {"","","","","","","",""},
-        {"","","","","","","",""},
-        {"P","P","P","P","P","P","P","P"},
-        {"R","N","B","Q","K","B","N","R"},
-    };
-    startSnap.whiteTurn      = true;
-    startSnap.whiteKingMoved = startSnap.blackKingMoved  = false;
-    startSnap.whiteRookAMoved= startSnap.whiteRookHMoved = false;
-    startSnap.blackRookAMoved= startSnap.blackRookHMoved = false;
-    startSnap.enPassantX     = startSnap.enPassantY      = -1;
-    startSnap.syncFromString();
-    return startSnap;
-}
-
 static std::string decodePoly(uint16_t m) {
     int toFile   = (m >> 0) & 7;
     int toRank   = (m >> 3) & 7;
@@ -133,6 +113,7 @@ static std::string decodePoly(uint16_t m) {
     return uci;
 }
 
+// Android implementation
 #ifdef __ANDROID__
 
 bool openingBookLoad(const char *path) {
@@ -168,7 +149,23 @@ bool openingBookLoad(const char *path) {
     gLoaded = true;
     BLOGI("load: OK — %zu entries from %s", count, path);
 
-    BoardSnapshot startSnap = makeStartingPosition();
+    BoardSnapshot startSnap;
+    startSnap.board = {
+        {"r","n","b","q","k","b","n","r"},
+        {"p","p","p","p","p","p","p","p"},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"","","","","","","",""},
+        {"P","P","P","P","P","P","P","P"},
+        {"R","N","B","Q","K","B","N","R"},
+    };
+    startSnap.whiteTurn      = true;
+    startSnap.whiteKingMoved = startSnap.blackKingMoved  = false;
+    startSnap.whiteRookAMoved= startSnap.whiteRookHMoved = false;
+    startSnap.blackRookAMoved= startSnap.blackRookHMoved = false;
+    startSnap.enPassantX     = startSnap.enPassantY      = -1;
+    startSnap.syncFromString();
     uint64_t startHash = polyHash(startSnap);
     bool hashOk = (startHash == 0x463b96181691fc9cULL);
     BLOGI("load: start hash=%016llx expected=463b96181691fc9c [%s]",
@@ -198,6 +195,7 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
 
     if (it == gBook.end() || it->key != hash) {
         BLOGI("probe: no book entry for this position");
+        gLastBookMove = {"", 0, 0, false};
         return "";
     }
 
@@ -209,7 +207,10 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
         BLOGI("probe:   candidate %s weight=%u", decodePoly(jt->move).c_str(), jt->weight);
     }
 
-    if (total == 0) return "";
+    if (total == 0) {
+        gLastBookMove = {"", 0, 0, false};
+        return "";
+    }
 
     uint32_t pick = (uint32_t)(rand() % total);
     uint32_t acc  = 0;
@@ -218,24 +219,53 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
         if (pick < acc) {
             std::string chosen = decodePoly(mv);
             BLOGI("probe: chosen %s (pick=%u total=%u)", chosen.c_str(), pick, total);
+            gLastBookMove = {chosen, wt, total, true};
             return chosen;
         }
     }
-    return decodePoly(candidates.back().first);
+    std::string chosen = decodePoly(candidates.back().first);
+    gLastBookMove = {chosen, candidates.back().second, total, true};
+    return chosen;
 }
 
-#elif defined(__APPLE__) && TARGET_OS_IOS
+BookMoveInfo getLastBookMoveInfo() {
+    return gLastBookMove;
+}
+
+bool hasBookMoves(const BoardSnapshot &snap) {
+    if (!gLoaded || gBook.empty()) return false;
+    
+    uint64_t hash = polyHash(snap);
+    auto it = std::lower_bound(gBook.begin(), gBook.end(), hash,
+                               [](const PolyEntry &e, uint64_t k){ return e.key < k; });
+    
+    return it != gBook.end() && it->key == hash;
+}
+
+// iOS implementation delegated to OpeningBook_iOS.mm
 #elif defined(__APPLE__) && TARGET_OS_IOS
 
 extern bool openingBookLoad(const char *path);
 extern std::string openingBookProbe(const BoardSnapshot &snap);
-platforms
-#elseopeningBookLoad(const char * /*path*/) {
+extern BookMoveInfo getLastBookMoveInfo();
+extern bool hasBookMoves(const BoardSnapshot &snap);
+
+#else
+
+bool openingBookLoad(const char * /*path*/) {
     return false;
 }
 
 std::string openingBookProbe(const BoardSnapshot & /*snap*/) {
     return "";
+}
+
+BookMoveInfo getLastBookMoveInfo() {
+    return {"", 0, 0, false};
+}
+
+bool hasBookMoves(const BoardSnapshot & /*snap*/) {
+    return false;
 }
 
 #endif

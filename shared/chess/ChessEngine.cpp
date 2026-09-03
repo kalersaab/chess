@@ -745,3 +745,8 @@ bool ChessEngine::goToMove(int index) {
     snap.syncToString();
     return true;
 }
+
+
+BoardSnapshot ChessEngine::getBoardSnapshot() const {
+    return snap;
+}

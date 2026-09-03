@@ -1,4 +1,5 @@
 #include "NativeChessModule.h"
+#include "OpeningBook.h"
 #include <thread>
 
 namespace facebook::react {
@@ -93,6 +94,21 @@ bool        NativeChessModule::goToMove(jsi::Runtime &, int index) { return engi
 
 void        NativeChessModule::playSound(jsi::Runtime &, std::string name) {
     SoundEngine::play(name);
+}
+
+jsi::Object NativeChessModule::getLastBookMoveInfo(jsi::Runtime &rt) {
+    auto bookInfo = ::getLastBookMoveInfo();
+    jsi::Object result(rt);
+    result.setProperty(rt, "move", jsi::String::createFromUtf8(rt, bookInfo.move));
+    result.setProperty(rt, "weight", jsi::Value(static_cast<double>(bookInfo.weight)));
+    result.setProperty(rt, "totalWeight", jsi::Value(static_cast<double>(bookInfo.totalWeight)));
+    result.setProperty(rt, "isFromBook", jsi::Value(bookInfo.isFromBook));
+    return result;
+}
+
+bool NativeChessModule::hasBookMoves(jsi::Runtime &rt) {
+    auto snap = engine->getBoardSnapshot();
+    return ::hasBookMoves(snap);
 }
 
 }

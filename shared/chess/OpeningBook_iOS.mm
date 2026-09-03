@@ -34,6 +34,7 @@ struct PolyEntry { uint64_t key; uint16_t move; uint16_t weight; uint32_t learn;
 
 static std::vector<PolyEntry> gBook;
 static bool gLoaded = false;
+static BookMoveInfo gLastBookMove = {"", 0, 0, false};  // Track last book move
 
 static uint16_t bs16(uint16_t x) { return (uint16_t)((x>>8)|(x<<8)); }
 static uint64_t bs64(uint64_t x) { return __builtin_bswap64(x); }
@@ -218,7 +219,10 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
         BLOGI("probe:   candidate %s weight=%u", decodePoly(jt->move).c_str(), jt->weight);
     }
 
-    if (total == 0) return "";
+    if (total == 0) {
+        gLastBookMove = {"", 0, 0, false};
+        return "";
+    }
 
     uint32_t pick = (uint32_t)(rand() % total);
     uint32_t acc  = 0;
@@ -227,8 +231,25 @@ std::string openingBookProbe(const BoardSnapshot &snap) {
         if (pick < acc) {
             std::string chosen = decodePoly(mv);
             BLOGI("probe: chosen %s (pick=%u total=%u)", chosen.c_str(), pick, total);
+            gLastBookMove = {chosen, wt, total, true};
             return chosen;
         }
     }
-    return decodePoly(candidates.back().first);
+    std::string chosen = decodePoly(candidates.back().first);
+    gLastBookMove = {chosen, candidates.back().second, total, true};
+    return chosen;
+}
+
+BookMoveInfo getLastBookMoveInfo() {
+    return gLastBookMove;
+}
+
+bool hasBookMoves(const BoardSnapshot &snap) {
+    if (!gLoaded || gBook.empty()) return false;
+    
+    uint64_t hash = polyHash(snap);
+    auto it = std::lower_bound(gBook.begin(), gBook.end(), hash,
+                               [](const PolyEntry &e, uint64_t k){ return e.key < k; });
+    
+    return it != gBook.end() && it->key == hash;
 }

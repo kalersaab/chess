@@ -1,5 +1,12 @@
 import {TurboModule, TurboModuleRegistry} from 'react-native';
 
+export interface BookMoveInfo {
+  move: string;
+  weight: number;
+  totalWeight: number;
+  isFromBook: boolean;
+}
+
 export interface Spec extends TurboModule {
   getBoard(): string[][];
   makeMove(move: string): Promise<string>;
@@ -18,6 +25,8 @@ export interface Spec extends TurboModule {
   loadPGN(pgn: string): boolean;
   goToMove(index: number): boolean;
   playSound(name: string): void;
+  getLastBookMoveInfo(): BookMoveInfo;
+  hasBookMoves(): boolean;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

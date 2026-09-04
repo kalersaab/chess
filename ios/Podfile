@@ -61,7 +61,7 @@ target 'chess' do
         # Source files — add each .cpp/.mm as a PBXBuildFile if not already present
         sources_phase = t.source_build_phase
         chess_sources.each do |src_path|
-          next if sources_phase.files.any? { |f| f.file_ref&.real_path&.to_s == src_path }
+          next if sources_phase.files.any? { |f| f.file_ref&.path == src_path }
           file_ref = t.project.new_file(src_path)
           sources_phase.add_file_reference(file_ref, true)
         end
@@ -73,7 +73,7 @@ target 'chess' do
         # Find or create a "Copy Files" resources phase
         resources_phase = t.resources_build_phase
         mp3_files.each do |mp3_path|
-          next if resources_phase.files.any? { |f| f.file_ref&.real_path&.to_s == mp3_path }
+          next if resources_phase.files.any? { |f| f.file_ref&.path == mp3_path }
           file_ref = t.project.new_file(mp3_path)
           resources_phase.add_file_reference(file_ref, true)
         end

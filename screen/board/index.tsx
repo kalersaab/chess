@@ -9,7 +9,6 @@ import {
   TextInput,
   Modal,
   ScrollView,
-  InteractionManager,
 } from 'react-native';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Background from '../Background';
@@ -136,6 +135,14 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
     }
   }, []);
 
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (gameMode !== 'players') return;
     if (gameOver) return;
@@ -172,22 +179,66 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   }, [gameMode, turn, gameOver]);
 
   useEffect(() => {
-    if (gameMode !== 'computer') return;
-    if (turn !== PIECE_COLOR.black) return;
-    if (isComputerThinking || gameOver) return;
+    if (gameMode !== 'computer') {
+      return;
+    }
+    if (turn !== PIECE_COLOR.black) {
+      return;
+    }
+    if (isComputerThinking || gameOver) {
+      return;
+    }
 
+    let isMounted = true;
+
+    console.log('AI thinking...');
     setIsComputerThinking(true);
 
-    const task = InteractionManager.runAfterInteractions(async () => {
+    // Use setTimeout to defer AI move to next frame
+    const timerId = setTimeout(async () => {
+      if (!isMounted) return;
+
       try {
-        const bestMove = await NativeChessModule.getBestMove(false, computerDepth);
+        console.log('Requesting best move for depth:', computerDepth);
+        
+        // Add a timeout in case C++ hangs
+        const bestMovePromise = NativeChessModule.getBestMove(false, computerDepth);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AI timeout')), 30000)
+        );
+        
+        const bestMove = await Promise.race([bestMovePromise, timeoutPromise]) as string;
+        console.log('Best move received:', bestMove);
+        
+        if (!isMounted) return;
+        
         if (bestMove) {
-          const boardBefore = board;
+          // Get board state BEFORE making the move
+          const boardSnapshot = NativeChessModule.getBoard();
           const result = await NativeChessModule.makeMove(bestMove);
+          console.log('Move result:', result);
+          
+          if (!isMounted) return;
+          
           setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
+          
+          Promise.resolve().then(() => {
+            if (!isMountedRef.current) return;
+            setBoard(NativeChessModule.getBoard());
+            setTurn(NativeChessModule.getTurn() as PIECE_COLOR);
+            const parsed = parsePgnMoves(NativeChessModule.getPGN());
+            setMoves(parsed);
+            setCurrentMoveIdx(parsed.length - 1);
+            try {
+              const bookInfo = NativeChessModule.getLastBookMoveInfo();
+              setBookMoveInfo(bookInfo);
+            } catch (e) {
+              setBookMoveInfo(null);
+            }
+          });
+          
           if (result === CHECK_STATUS.checkmate) {
             NativeChessModule.playSound('victory');
-            refreshBoard();
             setGameOver(true);
             Alert.alert('Checkmate', 'Computer wins!');
           } else {
@@ -201,20 +252,35 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
             } else {
               const toX = to.charCodeAt(0) - 97;
               const toY = 8 - parseInt(to[1], 10);
-              const wasOccupied = !!(boardBefore[toY]?.[toX]);
+              const wasOccupied = !!(boardSnapshot[toY]?.[toX]);
               if (result === CHECK_STATUS.check)  NativeChessModule.playSound('check');
               else if (wasOccupied)               NativeChessModule.playSound('capture');
               else                                NativeChessModule.playSound('move');
             }
-            refreshBoard();
+          }
+          
+          if (isMounted) {
+            setIsComputerThinking(false);
+          }
+        } else {
+          console.warn('No best move found from engine');
+          if (isMounted) {
+            setIsComputerThinking(false);
           }
         }
-      } catch {}
-      setIsComputerThinking(false);
-    });
+      } catch (e) {
+        console.error('AI move error:', e);
+        if (isMounted) {
+          setIsComputerThinking(false);
+        }
+      }
+    }, 100);
 
-    return () => task.cancel();
-  }, [turn, gameMode, isComputerThinking, gameOver, refreshBoard, computerDepth]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+    };
+  }, [turn, gameMode, gameOver, computerDepth, refreshBoard]);
 
   const finishPromotion = useCallback(async (piece: string) => {
     if (!pendingPromotion) return;
@@ -424,10 +490,10 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   );
 }
 
-export default function Board({ gameMode, onBack }: BoardProps) {
+export default function Board({ gameMode, difficulty, onBack }: BoardProps) {
   return (
     <SelectionProvider>
-      <BoardInner gameMode={gameMode} onBack={onBack} />
+      <BoardInner gameMode={gameMode} difficulty={difficulty} onBack={onBack} />
     </SelectionProvider>
   );
 }

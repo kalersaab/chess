@@ -13,6 +13,64 @@
 static std::atomic<bool> perftDone{false};
 static std::mutex engineMutex;
 
+// Polyglot books encode castling as king-to-rook-square (e1h1, e8a8, ...).
+// Convert those to standard UCI (e1g1, e8c8) when the mover is a king.
+static std::string polyglotCastleToUci(const BoardSnapshot &snap, std::string uci) {
+    if (uci.size() < 4) return uci;
+    int fromX = 8 - (uci[1] - '0'), fromY = uci[0] - 'a';
+    int toX   = 8 - (uci[3] - '0'), toY   = uci[2] - 'a';
+    if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7 ||
+        toX   < 0 || toX   > 7 || toY   < 0 || toY   > 7)
+        return uci;
+    if (pieceType(snap.bd[sq(fromX, fromY)]) != 6) return uci;
+    if (fromX != toX || fromY != 4) return uci;
+    if (toY == 7) uci[2] = 'g';
+    else if (toY == 0) uci[2] = 'c';
+    return uci;
+}
+
+static bool isCheckmateUnlocked(BoardSnapshot &snap, bool white) {
+    if (!isInCheck(snap, white)) return false;
+    for (const auto &m : generateAllMoves(snap, white)) {
+        BoardSnapshot saved = snap;
+        uint8_t *s    = snap.bd;
+        uint8_t piece = s[sq(m.fromX, m.fromY)];
+        bool    isW   = pieceIsWhite(piece);
+        uint8_t tp    = pieceType(piece);
+        bool isCastle = (tp == 6 && std::abs(m.toY - m.fromY) == 2);
+        bool isEP     = (tp == 1 && std::abs(m.toY - m.fromY) == 1 &&
+                         s[sq(m.toX, m.toY)] == EMPTY &&
+                         m.toX == snap.enPassantX && m.toY == snap.enPassantY);
+        if (isCastle) {
+            s[sq(m.toX, m.toY)]    = piece;
+            s[sq(m.fromX, m.fromY)] = EMPTY;
+            bool ks = (m.toY == 6);
+            int rf = ks ? 7 : 0, rt = ks ? 5 : 3;
+            s[sq(m.toX, rt)] = s[sq(m.toX, rf)];
+            s[sq(m.toX, rf)] = EMPTY;
+        } else {
+            s[sq(m.toX, m.toY)]    = piece;
+            s[sq(m.fromX, m.fromY)] = EMPTY;
+            if (isEP) s[sq(m.fromX, m.toY)] = EMPTY;
+            if (m.promotion != '\0') {
+                uint8_t pp;
+                switch (m.promotion) {
+                    case 'q': pp = isW ? W_QUEEN  : B_QUEEN;  break;
+                    case 'r': pp = isW ? W_ROOK   : B_ROOK;   break;
+                    case 'b': pp = isW ? W_BISHOP : B_BISHOP; break;
+                    default:  pp = isW ? W_KNIGHT : B_KNIGHT; break;
+                }
+                s[sq(m.toX, m.toY)] = pp;
+            }
+        }
+        snap.syncOccupancy();
+        bool stillCheck = isInCheck(snap, white);
+        snap = saved;
+        if (!stillCheck) return false;
+    }
+    return true;
+}
+
 ChessEngine::ChessEngine() {
     whiteSeconds = DEFAULT_TIME;
     blackSeconds = DEFAULT_TIME;
@@ -85,52 +143,18 @@ std::string ChessEngine::getTurn() const { return snap.whiteTurn ? "white" : "bl
 bool ChessEngine::isInCheck(bool white) const { return ::isInCheck(snap, white); }
 
 bool ChessEngine::isCheckmate(bool white) {
-    if (!isInCheck(white)) return false;
-    for (const auto &m : generateAllMoves(snap, white)) {
-        BoardSnapshot saved = snap;
-        uint8_t *s    = snap.bd;
-        uint8_t piece = s[sq(m.fromX, m.fromY)];
-        bool    isW   = pieceIsWhite(piece);
-        uint8_t tp    = pieceType(piece);
-        bool isCastle = (tp == 6 && std::abs(m.toY - m.fromY) == 2);
-        bool isEP     = (tp == 1 && std::abs(m.toY - m.fromY) == 1 &&
-                         s[sq(m.toX, m.toY)] == EMPTY &&
-                         m.toX == snap.enPassantX && m.toY == snap.enPassantY);
-        if (isCastle) {
-            s[sq(m.toX, m.toY)]    = piece;
-            s[sq(m.fromX, m.fromY)] = EMPTY;
-            bool ks = (m.toY == 6);
-            int rf = ks ? 7 : 0, rt = ks ? 5 : 3;
-            s[sq(m.toX, rt)] = s[sq(m.toX, rf)];
-            s[sq(m.toX, rf)] = EMPTY;
-        } else {
-            s[sq(m.toX, m.toY)]    = piece;
-            s[sq(m.fromX, m.fromY)] = EMPTY;
-            if (isEP) s[sq(m.fromX, m.toY)] = EMPTY;
-            if (m.promotion != '\0') {
-                uint8_t pp;
-                switch (m.promotion) {
-                    case 'q': pp = isW ? W_QUEEN  : B_QUEEN;  break;
-                    case 'r': pp = isW ? W_ROOK   : B_ROOK;   break;
-                    case 'b': pp = isW ? W_BISHOP : B_BISHOP; break;
-                    default:  pp = isW ? W_KNIGHT : B_KNIGHT; break;
-                }
-                s[sq(m.toX, m.toY)] = pp;
-            }
-        }
-        snap.syncOccupancy();
-        bool stillCheck = ::isInCheck(snap, white);
-        snap = saved;
-        if (!stillCheck) return false;
-    }
-    return true;
+    std::lock_guard<std::mutex> lock(engineMutex);
+    return isCheckmateUnlocked(snap, white);
 }
 
 std::string ChessEngine::makeMove(const std::string &move) {
-    if (move.length() != 4 && move.length() != 5) return "invalid";
+    std::lock_guard<std::mutex> lock(engineMutex);
 
-    int fromX = 8 - (move[1] - '0'), fromY = move[0] - 'a';
-    int toX   = 8 - (move[3] - '0'), toY   = move[2] - 'a';
+    std::string uci = polyglotCastleToUci(snap, move);
+    if (uci.length() != 4 && uci.length() != 5) return "invalid";
+
+    int fromX = 8 - (uci[1] - '0'), fromY = uci[0] - 'a';
+    int toX   = 8 - (uci[3] - '0'), toY   = uci[2] - 'a';
 
     if (fromX < 0 || fromX > 7 || fromY < 0 || fromY > 7 ||
         toX   < 0 || toX   > 7 || toY   < 0 || toY   > 7)
@@ -149,12 +173,12 @@ std::string ChessEngine::makeMove(const std::string &move) {
     char    promoPiece   = 'q';
 
     if (reachesPromo) {
-        if (move.length() != 5) return "invalid";
-        char raw = (char)tolower(move[4]);
+        if (uci.length() != 5) return "invalid";
+        char raw = (char)tolower(uci[4]);
         if (raw != 'q' && raw != 'r' && raw != 'b' && raw != 'n') return "invalid";
         promoPiece = raw;
     } else {
-        if (move.length() == 5) return "invalid";
+        if (uci.length() == 5) return "invalid";
     }
 
     auto legal = generateAllMoves(snap, isW);
@@ -219,20 +243,22 @@ std::string ChessEngine::makeMove(const std::string &move) {
     bool wasWhite = isW;
     if (wasWhite) {
         std::string san = std::string(1, (char)('a' + fromY)) + std::string(1, (char)('0' + (8 - toX)));
-        recordMove(move, san);
+        recordMove(uci, san);
     } else {
         std::string san = std::string(1, (char)('a' + fromY)) + std::string(1, (char)('0' + (8 - toX)));
-        recordMove(move, san);
+        recordMove(uci, san);
         fullMoveNumber++;
     }
 
     if (::isInCheck(snap, !isW))
-        return isCheckmate(!isW) ? "checkmate" : "check";
+        return isCheckmateUnlocked(snap, !isW) ? "checkmate" : "check";
 
     return "valid";
 }
 
 std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
+    std::lock_guard<std::mutex> lock(engineMutex);
+    
     std::vector<std::string> result;
     if (square.length() != 2) return result;
 
@@ -292,7 +318,7 @@ std::vector<std::string> ChessEngine::getValidMoves(const std::string &square) {
 
 std::string ChessEngine::getBestMove(bool white, int depth) {
     std::lock_guard<std::mutex> lock(engineMutex);
-    std::string bookMove = openingBookProbe(snap);
+    std::string bookMove = polyglotCastleToUci(snap, openingBookProbe(snap));
     if (!bookMove.empty()) return bookMove;
     Searcher searcher(snap);
     return searcher.getBestMove(white, depth);

@@ -1,6 +1,5 @@
 import { PIECE_COLOR, PIECE_TYPE } from "../helper";
-import { GameMode } from "../screen/Home";
-import { PIECES, DifficultyLevel } from "../utils";
+import { PIECES, DifficultyLevel, GameMode } from "../utils";
 
 export interface HighlightSquare {
   x: number;
@@ -17,6 +16,7 @@ export interface PieceProps {
   id: keyof typeof PIECES;
   position: Position;
   onMoveEnd: (isCheckmate?: boolean) => void;
+  onDrawByRepetition?: () => void;
   currentTurn: PIECE_COLOR;
   board: string[][];
 }
@@ -43,7 +43,6 @@ export interface ClockProps {
 
 export interface BoardProps {
   gameMode: GameMode;
-  onBack: () => void;
   initialTimeSeconds?: number;
   difficulty?: DifficultyLevel;
 }

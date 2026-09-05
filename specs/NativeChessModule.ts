@@ -27,6 +27,7 @@ export interface Spec extends TurboModule {
   playSound(name: string): void;
   getLastBookMoveInfo(): BookMoveInfo;
   hasBookMoves(): boolean;
+  isThreefoldRepetition(): boolean;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>(

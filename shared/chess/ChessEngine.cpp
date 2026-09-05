@@ -122,6 +122,7 @@ void ChessEngine::reset() {
     pgnMoves.clear();
     fullMoveNumber = 1;
     resetTimer();
+    clearPositionHistory();
 }
 
 void ChessEngine::resetTimer() {
@@ -249,6 +250,8 @@ std::string ChessEngine::makeMove(const std::string &move) {
         recordMove(uci, san);
         fullMoveNumber++;
     }
+
+    recordPosition();
 
     if (::isInCheck(snap, !isW))
         return isCheckmateUnlocked(snap, !isW) ? "checkmate" : "check";
@@ -764,7 +767,6 @@ bool ChessEngine::goToMove(int index) {
         pgnMoves.push_back(uci);
     }
 
-    // Restore remaining moves (for future navigation)
     for (int i = index + 1; i < (int)allMoves.size(); i++)
         pgnMoves.push_back(allMoves[i]);
 
@@ -775,4 +777,35 @@ bool ChessEngine::goToMove(int index) {
 
 BoardSnapshot ChessEngine::getBoardSnapshot() const {
     return snap;
+}
+
+std::string ChessEngine::getPositionKey() const {
+    std::string fen = getFEN();
+    std::string positionKey;
+    int spaceCount = 0;
+    
+    for (char c : fen) {
+        if (c == ' ') {
+            spaceCount++;
+            if (spaceCount >= 4) break;
+        }
+        positionKey += c;
+    }
+    
+    return positionKey;
+}
+
+void ChessEngine::recordPosition() {
+    std::string key = getPositionKey();
+    positionHistory[key]++;
+}
+
+bool ChessEngine::isThreefoldRepetition() const {
+    std::string key = getPositionKey();
+    auto it = positionHistory.find(key);
+    return it != positionHistory.end() && it->second >= 3;
+}
+
+void ChessEngine::clearPositionHistory() {
+    positionHistory.clear();
 }

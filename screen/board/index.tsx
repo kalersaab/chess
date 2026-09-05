@@ -8,9 +8,10 @@ import {
   Text,
   TextInput,
   Modal,
-  ScrollView,
+  FlatList,
+  BackHandler,
 } from 'react-native';
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import Background from '../Background';
 import NativeChessModule from '../../specs/NativeChessModule';
 import Piece from '../pieces';
@@ -18,8 +19,14 @@ import MoveHighlights from '../MoveHighlights';
 import Clock from '../clock';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
 import { PIECES, BOARD_SIZE, SIZE, getDifficultyDepth, DIFFICULTY_LEVELS } from '../../utils';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SelectionProvider, useSelection } from '../../context';
 import { BoardProps } from '../../interface';
+import { RootStackParamList } from '../../navigation/types';
+import { BOARD_COLOR_THEMES, BoardColorTheme } from '../BoardColor';
+import { useClock } from '../../context/ClockContext';
+import { useBoardColor } from '../../context/BoardColorContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CELL_SIZE = SIZE;
@@ -54,53 +61,83 @@ interface MoveTableProps {
   currentMoveIdx: number;
   onMovePress: (index: number) => void;
 }
-const MoveTable = ({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
-  const scrollRef = useRef<ScrollView>(null);
-  const pairs: [string, string | null][] = [];
-  for (let i = 0; i < moves.length; i += 2) {
-    pairs.push([moves[i], moves[i + 1] ?? null]);
-  }
+const MoveTable = React.memo(({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
+  const flatListRef = useRef<FlatList>(null);
+  
+  const pairs = useMemo(() => {
+    const result: [string, string | null][] = [];
+    for (let i = 0; i < moves.length; i += 2) {
+      result.push([moves[i], moves[i + 1] ?? null]);
+    }
+    return result;
+  }, [moves]);
 
   useEffect(() => {
-    scrollRef.current?.scrollToEnd({ animated: true });
-  }, [moves.length]);
+    if (pairs.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [moves.length, pairs.length]);
+
+  const renderMovePair = ({ item, index }: { item: [string, string | null], index: number }) => {
+    const [white, black] = item;
+    const whiteIdx = index * 2;
+    const blackIdx = index * 2 + 1;
+    
+    return (
+      <View style={styles.movePair}>
+        <Text style={styles.moveNum}>{index + 1}.</Text>
+        <TouchableOpacity onPress={() => onMovePress(whiteIdx)}>
+          <Text style={[styles.moveToken, whiteIdx === currentMoveIdx && styles.moveTokenActive]}>
+            {white}
+          </Text>
+        </TouchableOpacity>
+        {black && (
+          <TouchableOpacity onPress={() => onMovePress(blackIdx)}>
+            <Text style={[styles.moveToken, blackIdx === currentMoveIdx && styles.moveTokenActive]}>
+              {black}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  const keyExtractor = (item: [string, string | null], index: number) => `move-${index}`;
+
+  const getItemLayout = (data: ArrayLike<[string, string | null]> | null | undefined, index: number) => ({
+    length: 100,
+    offset: 100 * index,
+    index,
+  });
 
   if (pairs.length === 0) return null;
 
   return (
-    <ScrollView
-      ref={scrollRef}
+    <FlatList
+      ref={flatListRef}
+      data={pairs}
+      renderItem={renderMovePair}
+      keyExtractor={keyExtractor}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.moveScroll}
       contentContainerStyle={styles.moveScrollContent}
-    >
-      {pairs.map(([white, black], idx) => {
-        const whiteIdx = idx * 2;
-        const blackIdx = idx * 2 + 1;
-        return (
-          <View key={idx} style={styles.movePair}>
-            <Text style={styles.moveNum}>{idx + 1}.</Text>
-            <TouchableOpacity onPress={() => onMovePress(whiteIdx)}>
-              <Text style={[styles.moveToken, whiteIdx === currentMoveIdx && styles.moveTokenActive]}>
-                {white}
-              </Text>
-            </TouchableOpacity>
-            {black && (
-              <TouchableOpacity onPress={() => onMovePress(blackIdx)}>
-                <Text style={[styles.moveToken, blackIdx === currentMoveIdx && styles.moveTokenActive]}>
-                  {black}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        );
-      })}
-    </ScrollView>
+      initialNumToRender={10}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      removeClippedSubviews={true}
+      getItemLayout={getItemLayout}
+    />
   );
-};
+});
 
-function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = 'normal' }: BoardProps) {
+interface BoardInnerProps extends BoardProps {
+  boardColorTheme?: BoardColorTheme;
+}
+
+function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal', boardColorTheme = 'classic' }: BoardInnerProps) {
+  const navigation = useNavigation();
+  const clockContext = useClock();
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
   const [turn, setTurn] = useState<PIECE_COLOR>(() => NativeChessModule.getTurn() as PIECE_COLOR);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
@@ -110,9 +147,13 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   const [currentMoveIdx, setCurrentMoveIdx] = useState(-1);
   const [showFenModal, setShowFenModal] = useState(false);
   const [fenInput, setFenInput] = useState('');
-  const [whiteTimeSeconds, setWhiteTimeSeconds] = useState(initialTimeSeconds);
-  const [blackTimeSeconds, setBlackTimeSeconds] = useState(initialTimeSeconds);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const whiteTimeSeconds = clockContext.whiteTime;
+  const blackTimeSeconds = clockContext.blackTime;
+  const setWhiteTimeSeconds = clockContext.setWhiteTime;
+  const setBlackTimeSeconds = clockContext.setBlackTime;
+  
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerInitializedRef = useRef(false);
   const computerDepth = getDifficultyDepth(difficulty);
   const [bookMoveInfo, setBookMoveInfo] = useState<any>(null);
@@ -190,33 +231,24 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
     }
 
     let isMounted = true;
-
-    console.log('AI thinking...');
     setIsComputerThinking(true);
 
-    // Use setTimeout to defer AI move to next frame
     const timerId = setTimeout(async () => {
       if (!isMounted) return;
 
       try {
-        console.log('Requesting best move for depth:', computerDepth);
-        
-        // Add a timeout in case C++ hangs
         const bestMovePromise = NativeChessModule.getBestMove(false, computerDepth);
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('AI timeout')), 30000)
         );
         
         const bestMove = await Promise.race([bestMovePromise, timeoutPromise]) as string;
-        console.log('Best move received:', bestMove);
         
         if (!isMounted) return;
         
         if (bestMove) {
-          // Get board state BEFORE making the move
           const boardSnapshot = NativeChessModule.getBoard();
           const result = await NativeChessModule.makeMove(bestMove);
-          console.log('Move result:', result);
           
           if (!isMounted) return;
           
@@ -241,6 +273,14 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
             NativeChessModule.playSound('victory');
             setGameOver(true);
             Alert.alert('Checkmate', 'Computer wins!');
+          } else if (NativeChessModule.isThreefoldRepetition()) {
+            NativeChessModule.playSound('game_end');
+            setGameOver(true);
+            Alert.alert(
+              'Draw',
+              'Game drawn by threefold repetition!',
+              [{ text: 'New Game', onPress: () => resetGame() }]
+            );
           } else {
             const from = bestMove.slice(0, 2);
             const to   = bestMove.slice(2, 4);
@@ -290,7 +330,18 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
       else if (result === CHECK_STATUS.check) NativeChessModule.playSound('check');
       else NativeChessModule.playSound('move');
       refreshBoard();
-      if (result === CHECK_STATUS.checkmate) Alert.alert('Checkmate');
+      
+      // Check for threefold repetition
+      if (result !== CHECK_STATUS.checkmate && NativeChessModule.isThreefoldRepetition()) {
+        setGameOver(true);
+        Alert.alert(
+          'Draw',
+          'Game drawn by threefold repetition!',
+          [{ text: 'New Game', onPress: () => resetGame() }]
+        );
+      } else if (result === CHECK_STATUS.checkmate) {
+        Alert.alert('Checkmate');
+      }
     }
     setPendingPromotion(null);
   }, [pendingPromotion, refreshBoard]);
@@ -311,13 +362,51 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
     setGameOver(false);
     setMoves([]);
     setCurrentMoveIdx(-1);
-    setWhiteTimeSeconds(initialTimeSeconds);
-    setBlackTimeSeconds(initialTimeSeconds);
+    clockContext.resetClock(initialTimeSeconds);
     timerInitializedRef.current = false;
     NativeChessModule.reset();
     NativeChessModule.resetTimer();
     refreshBoard();
-  }, [refreshBoard, initialTimeSeconds]);
+  }, [refreshBoard, initialTimeSeconds, clockContext]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        Alert.alert(
+          'Quit game',
+          'Are you sure you want to go back? The current game will be lost.',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => {} },
+            { 
+              text: 'Quit', 
+              style: 'destructive', 
+              onPress: () => {
+                // Reset game state
+                setIsComputerThinking(false);
+                setLastAiMove(null);
+                setGameOver(false);
+                setMoves([]);
+                setCurrentMoveIdx(-1);
+                clockContext.resetClock(initialTimeSeconds);
+                timerInitializedRef.current = false;
+                NativeChessModule.reset();
+                NativeChessModule.resetTimer();
+                
+                // Use reset to go back to Home and clear the entire stack
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Home' }],
+                });
+              } 
+            },
+          ],
+        );
+        return true; // Prevent default back behavior
+      });
+
+      return () => backHandler.remove();
+    }, [navigation, initialTimeSeconds, clockContext]),
+  );
 
   const handleMovePress = useCallback((index: number) => {
     const ok = NativeChessModule.goToMove(index);
@@ -335,10 +424,20 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
       'Are you sure you want to go back? The current game will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Quit', style: 'destructive', onPress: () => { resetGame(); onBack(); } },
+        { 
+          text: 'Quit', 
+          style: 'destructive', 
+          onPress: () => { 
+            resetGame();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+          } 
+        },
       ],
     );
-  }, [resetGame, onBack]);
+  }, [resetGame, navigation]);
 
   const handleLoadFen = useCallback(() => {
     const input = fenInput.trim();
@@ -414,7 +513,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
 
       <MoveTable moves={moves} currentMoveIdx={currentMoveIdx} onMovePress={handleMovePress} />
       <View style={styles.boardContainer}>
-        <Background />
+        <Background colors={BOARD_COLOR_THEMES[boardColorTheme]} />
         <AiMoveHighlight lastAiMove={lastAiMove} />
         <MoveHighlights
           onSquareTap={handleSquareTap}
@@ -432,6 +531,7 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
                 currentTurn={humanTurn ? turn : (null as any)}
                 board={board}
                 onMoveEnd={refreshBoard}
+                onDrawByRepetition={resetGame}
               />
             );
           }),
@@ -490,18 +590,25 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   );
 }
 
-export default function Board({ gameMode, difficulty, onBack }: BoardProps) {
+export default function Board({ route }: NativeStackScreenProps<RootStackParamList, 'Game'>) {
+  const { gameMode, difficulty, boardColorTheme } = route.params;
+  const { boardColorTheme: contextTheme } = useBoardColor();
+  const theme = boardColorTheme || contextTheme;
+
   return (
     <SelectionProvider>
-      <BoardInner gameMode={gameMode} difficulty={difficulty} onBack={onBack} />
+      <BoardInner gameMode={gameMode} difficulty={difficulty} boardColorTheme={theme} />
     </SelectionProvider>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
+    flex: 1,
     width: SCREEN_WIDTH,
     alignItems: 'stretch',
+    justifyContent: 'center',
+    backgroundColor: 'rgb(36, 35, 32)',
   },
   headerBar: {
     flexDirection: 'row',

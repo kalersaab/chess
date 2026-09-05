@@ -34,6 +34,7 @@ public:
     void         playSound(jsi::Runtime &rt, std::string name);
     jsi::Object  getLastBookMoveInfo(jsi::Runtime &rt);
     bool         hasBookMoves(jsi::Runtime &rt);
+    bool         isThreefoldRepetition(jsi::Runtime &rt);
 
 private:
     std::unique_ptr<ChessEngine> engine;

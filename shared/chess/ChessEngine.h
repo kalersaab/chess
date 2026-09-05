@@ -2,6 +2,7 @@
 #include "BoardState.h"
 #include <string>
 #include <vector>
+#include <map>
 
 class ChessEngine {
 public:
@@ -26,6 +27,10 @@ public:
     void        recordMove(const std::string &uci, const std::string &san);
     BoardSnapshot getBoardSnapshot() const;
 
+    bool isThreefoldRepetition() const;
+    void recordPosition();
+    void clearPositionHistory();
+
 private:
     BoardSnapshot snap;
     static constexpr int DEFAULT_TIME = 10 * 60;
@@ -35,4 +40,7 @@ private:
 
     std::vector<std::string> pgnMoves;
     int fullMoveNumber;
+
+    std::map<std::string, int> positionHistory;
+    std::string getPositionKey() const;
 };

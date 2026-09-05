@@ -8,16 +8,14 @@ import {
   Image,
   Modal,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PIECES, BOARD_SIZE, DifficultyLevel, DIFFICULTY_LEVELS } from '../../utils';
+import { RootStackParamList } from '../../navigation/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CONTENT_WIDTH = Math.min(SCREEN_WIDTH - 40, 520);
 
-export type GameMode = 'players' | 'computer';
-
-interface HomeScreenProps {
-  onStart: (mode: GameMode, difficulty?: DifficultyLevel) => void;
-}
+export type { GameMode } from '../../utils';
 
 const ModeCard = ({
   title,
@@ -50,7 +48,7 @@ const ModeCard = ({
   </TouchableOpacity>
 );
 
-export default function HomeScreen({ onStart }: HomeScreenProps) {
+export default function HomeScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
 
   const handleComputerPress = () => {
@@ -59,7 +57,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
 
   const handleDifficultySelect = (difficulty: DifficultyLevel) => {
     setShowDifficultyModal(false);
-    onStart('computer', difficulty);
+    navigation.navigate('BoardColor', { gameMode: 'computer', difficulty });
   };
 
   return (
@@ -86,7 +84,7 @@ export default function HomeScreen({ onStart }: HomeScreenProps) {
               <View style={[styles.playerDot, styles.playerDotBlack]} />
             </View>
           }
-          onPress={() => onStart('players')}
+          onPress={() => navigation.navigate('BoardColor', { gameMode: 'players' })}
         />
 
         <ModeCard

@@ -1,38 +1,41 @@
-import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import HomeScreen, { GameMode } from './screen/Home';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import HomeScreen from './screen/Home';
+import BoardColorScreen from './screen/BoardColor';
 import Board from './screen/board';
-import { DifficultyLevel } from './utils';
+import { RootStackParamList } from './navigation/types';
+import { ClockProvider } from './context/ClockContext';
+import { BoardColorProvider } from './context/BoardColorContext';
 
-type Screen = 'home' | 'game';
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App() {
-  const [screen, setScreen] = useState<Screen>('home');
-  const [gameMode, setGameMode] = useState<GameMode>('players');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('normal');
-
-  const handleStart = (mode: GameMode, selectedDifficulty?: DifficultyLevel) => {
-    setGameMode(mode);
-    if (selectedDifficulty) {
-      setDifficulty(selectedDifficulty);
-    }
-    setScreen('game');
-  };
-
-  const handleBack = () => {
-    setScreen('home');
-  };
-
   return (
     <GestureHandlerRootView style={styles.root}>
-      <View style={styles.container}>
-        {screen === 'home' ? (
-          <HomeScreen onStart={handleStart} />
-        ) : (
-          <Board gameMode={gameMode} difficulty={difficulty} onBack={handleBack} />
-        )}
-      </View>
+      <SafeAreaProvider>
+        <BoardColorProvider>
+          <ClockProvider>
+            <NavigationContainer>
+              <Stack.Navigator
+                initialRouteName="Home"
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: styles.screen,
+                  animation: 'slide_from_right',
+                }}
+              >
+                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="BoardColor" component={BoardColorScreen} />
+                <Stack.Screen name="Game" component={Board} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </ClockProvider>
+        </BoardColorProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
@@ -40,11 +43,10 @@ function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: 'rgb(36, 35, 32)',
   },
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgb(36, 35, 32)',
   },
 });

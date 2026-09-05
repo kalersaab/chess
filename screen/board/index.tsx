@@ -18,8 +18,11 @@ import MoveHighlights from '../MoveHighlights';
 import Clock from '../clock';
 import { CHECK_STATUS, PIECE_COLOR } from '../../helper';
 import { PIECES, BOARD_SIZE, SIZE, getDifficultyDepth, DIFFICULTY_LEVELS } from '../../utils';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { SelectionProvider, useSelection } from '../../context';
 import { BoardProps } from '../../interface';
+import { RootStackParamList } from '../../navigation/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CELL_SIZE = SIZE;
@@ -100,7 +103,8 @@ const MoveTable = ({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
   );
 };
 
-function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = 'normal' }: BoardProps) {
+function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal' }: BoardProps) {
+  const navigation = useNavigation();
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
   const [turn, setTurn] = useState<PIECE_COLOR>(() => NativeChessModule.getTurn() as PIECE_COLOR);
   const [isComputerThinking, setIsComputerThinking] = useState(false);
@@ -335,10 +339,10 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
       'Are you sure you want to go back? The current game will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Quit', style: 'destructive', onPress: () => { resetGame(); onBack(); } },
+        { text: 'Quit', style: 'destructive', onPress: () => { resetGame(); navigation.goBack(); } },
       ],
     );
-  }, [resetGame, onBack]);
+  }, [resetGame, navigation]);
 
   const handleLoadFen = useCallback(() => {
     const input = fenInput.trim();
@@ -490,18 +494,23 @@ function BoardInner({ gameMode, onBack, initialTimeSeconds = 600, difficulty = '
   );
 }
 
-export default function Board({ gameMode, difficulty, onBack }: BoardProps) {
+export default function Board({ route }: NativeStackScreenProps<RootStackParamList, 'Game'>) {
+  const { gameMode, difficulty } = route.params;
+
   return (
     <SelectionProvider>
-      <BoardInner gameMode={gameMode} difficulty={difficulty} onBack={onBack} />
+      <BoardInner gameMode={gameMode} difficulty={difficulty} />
     </SelectionProvider>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
+    flex: 1,
     width: SCREEN_WIDTH,
     alignItems: 'stretch',
+    justifyContent: 'center',
+    backgroundColor: 'rgb(36, 35, 32)',
   },
   headerBar: {
     flexDirection: 'row',

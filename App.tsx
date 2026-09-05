@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import HomeScreen from './screen/Home';
 import BoardColorScreen from './screen/BoardColor';
 import Board from './screen/board';
+import PrivacyPolicyScreen from './screen/PrivacyPolicy';
 import { RootStackParamList } from './navigation/types';
 import { ClockProvider } from './context/ClockContext';
 import { BoardColorProvider } from './context/BoardColorContext';
@@ -31,6 +32,7 @@ function App() {
                 <Stack.Screen name="Home" component={HomeScreen} />
                 <Stack.Screen name="BoardColor" component={BoardColorScreen} />
                 <Stack.Screen name="Game" component={Board} />
+                <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </ClockProvider>

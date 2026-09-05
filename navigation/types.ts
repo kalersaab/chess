@@ -12,6 +12,7 @@ export type RootStackParamList = {
     difficulty?: DifficultyLevel;
     boardColorTheme?: BoardColorTheme;
   };
+  PrivacyPolicy: undefined;
 };
 
 declare global {

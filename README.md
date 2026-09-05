@@ -215,6 +215,20 @@ Tap the **⊞** button in the header during a game. Paste a standard PGN (with o
 
 ---
 
+## Privacy Policy
+
+Chess Engine respects your privacy. **We do not collect any personal data.** The app:
+
+- Does not require an internet connection
+- Does not use analytics or tracking
+- Does not contain ads
+- Does not collect or transmit any user information
+- Stores preferences locally on your device only
+
+For full details, see [PRIVACY_POLICY.md](./PRIVACY_POLICY.md).
+
+---
+
 ## TurboModule Integration Guide
 
 This section explains how the C++ chess engine is wired into React Native from scratch, so you can adapt the same pattern for any native C++ module.

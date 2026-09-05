@@ -101,6 +101,18 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
           onPress={handleComputerPress}
         />
       </View>
+      <View style={styles.footer}>
+        <TouchableOpacity
+          onPress={() => {
+            console.log('Navigating to Privacy Policy...');
+            navigation.navigate('PrivacyPolicy');
+          }}
+          style={styles.privacyButton}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.privacyText}>Privacy Policy</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.boardPreview}>
         {Array.from({ length: 8 }).map((_, row) => (
@@ -280,6 +292,24 @@ const styles = StyleSheet.create({
   },
   cpuIcon: {
     fontSize: 18,
+  },
+
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  privacyButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  privacyText: {
+    color: '#888',
+    fontSize: 12,
+    textDecorationLine: 'underline',
   },
 
   boardPreview: {

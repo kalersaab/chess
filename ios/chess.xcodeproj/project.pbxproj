@@ -11,6 +11,7 @@
 		015E221239E6ADA46F220D3E /* capture.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 959C8DD66BEC9FC01FDCE686 /* capture.mp3 */; };
 		021A94E013A6CDF42247CED4 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B6C349D0894DFF7A74D723A /* TranspositionTable.cpp */; };
 		04F4806E06A6B5F607CADD38 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 88E93B889785A7D0AE82A7FB /* TranspositionTable.cpp */; };
+		05DABEA0F1C6233179E3AF1F /* victory.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 294BD42C0E9A713B0B8B1808 /* victory.mp3 */; };
 		05E4F093327CBF0DF0274302 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2BB0E7FEF34CE1F16F6E99E /* Perft.cpp */; };
 		061DD7802070EECD314E3193 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7847C3EC7256A2AE5AE3AB7C /* NativeChessModule.cpp */; };
 		07C808AE47E70707CDBE5767 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C1D732135A51DD4598B083F0 /* MoveGen.cpp */; };
@@ -29,7 +30,11 @@
 		2357A3554C38671E808DA052 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D562792367A4D8C76195DD44 /* TranspositionTable.cpp */; };
 		23CF64F4311190DD09CA54CA /* capture.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A31855B158102CECFCFD9BC6 /* capture.mp3 */; };
 		254F7ED73E5DBA257B61A844 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 141C15B2EA193BEB6ECDFFE9 /* MoveGen.cpp */; };
+		26E52531AE65C53D0AD9F4CD /* OpeningBook_iOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = A48E07CCCE39B08C6FBE3C75 /* OpeningBook_iOS.mm */; };
+		2C286FAF1C16C1E5168D1334 /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5CE9ADAE32053BC0F335B7BD /* Evaluation.cpp */; };
+		305C612A6D5CD061F19756BA /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 59FE3469599704EBABFDD2C2 /* TranspositionTable.cpp */; };
 		307CD38CD3134B3E93793CD6 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BB55539DE444ED3C641E0FBF /* Attacks.cpp */; };
+		36D8A2BCB0966E7C0CA96373 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEBB1035C33059134FB53E74 /* Attacks.cpp */; };
 		395DCD7B361C13DA084129A5 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 134ECC6CA437DBE35AE9FECF /* TranspositionTable.cpp */; };
 		3B0286BB723A2B867924B1BA /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 77863111020FAD2A65ACE74C /* Evaluation.cpp */; };
 		3CDC6696DAD0EDC6F9A40396 /* victory.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 25D41E9A41113BA755CF9810 /* victory.mp3 */; };
@@ -57,14 +62,19 @@
 		6175AFEAE5E337AA8A288B43 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 73C25A2D2E64B914365E238B /* MoveGen.cpp */; };
 		61BE67D2ECFF70F8A116ED0D /* game_end.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = D65C6AD6014D11CB51D4EE7F /* game_end.mp3 */; };
 		6DC19AAE676A18343179BD25 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C179FD598D197F709739E807 /* Search.cpp */; };
+		6DEA055CF6AF77B657C2B090 /* castle.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = FE1C2E3A598C15BE55486C98 /* castle.mp3 */; };
 		6E0FF4299F543B87E9B8968F /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F5740351DD9C3B1CEBC6FF /* TranspositionTable.cpp */; };
 		6FCC826813248316BC80D025 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90FB173852D9D724A1E66E94 /* Search.cpp */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		779098D462F72B7ABE782D4F /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00B878E3A058E8364BAEC54F /* Perft.cpp */; };
+		7825C07B649B22BBFFA3ECBD /* game_end.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 403677D2701A330791A4E4C7 /* game_end.mp3 */; };
+		7BD0068332191D058853E79B /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12D9D0FAAFE635667DC031DE /* ChessEngine.cpp */; };
 		7C42CBFACABEAECCD263D905 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C1DDBA9F9923617416B7E0B /* ChessEngine.cpp */; };
+		7DAA5C6EE43250DE7BF608CD /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29ED5352DC40A0228A78C3A6 /* Search.cpp */; };
 		7EBD2A9C024C46AA4E07AFA7 /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D98BD5101D98BA008F843A66 /* Evaluation.cpp */; };
 		7EE47EBC502F80FE18408028 /* SoundEngine_android.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4568CF6E65AA2211471F4624 /* SoundEngine_android.cpp */; };
 		7FC639C6AE8A181F2E129571 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14ADAEB0CD9FFDA00AB47FD0 /* NativeChessModule.cpp */; };
+		80BCDA28DA83E5FDBD6E86F8 /* capture.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 4EB245215C22B23BEEF14CAB /* capture.mp3 */; };
 		81849B6485DA6E3B2E331720 /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BEEB70AAF36B478387DFD731 /* Evaluation.cpp */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		82AA57A08D3CEF6F026E5049 /* SoundEngine_android.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 59DD2204E587E6EB2CCA942E /* SoundEngine_android.cpp */; };
@@ -73,14 +83,18 @@
 		87A070B01B1C59DA2A9E54BC /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A9A8203ABB66B07B21939188 /* OpeningBook.cpp */; };
 		889AE3C31A45D6E57C873A2E /* move.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 8463016941A6285D741C5DCA /* move.mp3 */; };
 		8A7B6C1266EAF1C24D85AFF9 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF1C481F6F013C15669B2BD2 /* MoveGen.cpp */; };
+		8F963CF6BB19E340E06A865A /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 334E0117D8B4B17F66B900CD /* NativeChessModuleProvider.mm */; };
 		909DFD697DF3B528A12BD177 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DF3CFAEDC5E3BDA2E77C3FBF /* TranspositionTable.cpp */; };
 		95C21825326980DF359BBC8A /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BD3C6AB1F80523DB719C49B7 /* Perft.cpp */; };
 		95D9503521F6BCC7645EC252 /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 89B5ABF5075D412E644BD202 /* Search.cpp */; };
 		98270C6C257A69A11EA08575 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 042A5BC3365E696DB838950B /* NativeChessModule.cpp */; };
+		9864B1427645EB6A84E2A0BA /* check.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 48D4AA8CF6C4AF90F97CB9E4 /* check.mp3 */; };
+		988DD1346FB16328AE955358 /* SoundEngine_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = F7DD06C091DB42B77BC10A5A /* SoundEngine_ios.mm */; };
 		99A7538DE9200B3CA2D0CD8B /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = F31E4BBA9EECE365FF6E4A4C /* NativeChessModuleProvider.mm */; };
 		9FAD4353231D016FECDBBF79 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D702C85050D05658258C0A57 /* Perft.cpp */; };
 		9FAEAA58BE5AA3790105E0FB /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3B3881E45F51CECB9191B4C /* ChessEngine.cpp */; };
 		A019BBF8501EB67BADD3C28A /* SoundEngine_ios.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7BD24720ED3C6EEE2CF5F7AA /* SoundEngine_ios.mm */; };
+		A0D1CB397C6BF9810D228FDF /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FB7715758470A90F290DFB72 /* OpeningBook.cpp */; };
 		A19EB583340DBFDB4AC0A0BB /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 11825715A192AE9598A1E860 /* Perft.cpp */; };
 		A1C730DA7C10DB33334A0697 /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 044ED0AE0418129C989F2902 /* NativeChessModule.cpp */; };
 		A2427A3E778C334F770E859F /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F910803520D6579288632B00 /* NativeChessModule.cpp */; };
@@ -95,6 +109,7 @@
 		ABC5FCE8C3FEB1A3E594D48D /* check.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 5127969F38C87305A11BC3D9 /* check.mp3 */; };
 		ABDD0D30FCABFA0780E91526 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C2AA41E0FC16ABBDC179AC9 /* MoveGen.cpp */; };
 		AC13E5F18D06E7A83B4F9A3B /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8005862B2D4FDCBB846E9D5D /* NativeChessModule.cpp */; };
+		AC64F219C093B7B997916E3D /* move.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A4470E5D3D0861FA43B4CB2E /* move.mp3 */; };
 		AF1AD16EDDC1E561DDB17358 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 605FF905182B40DCBE8E50C0 /* ChessEngine.cpp */; };
 		AF62EED678D2485401327BD5 /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 041102D0CC2D8DA526DC743A /* NativeChessModuleProvider.mm */; };
 		B1C2CBFC8D1BFC9E0F3D1FFE /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A029566CF8161CB87DBD6266 /* Evaluation.cpp */; };
@@ -117,9 +132,11 @@
 		C45C9E527CFF5479C0ED64C5 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F69B163300FCA11D6D5726F4 /* OpeningBook.cpp */; };
 		C4B0A02CE32DC8E7A32B204F /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0614BD594BD5229BFD0A85C0 /* Evaluation.cpp */; };
 		C56914E1166946C3A22D14E7 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C85BB1A906874D3DEB75E1F8 /* Attacks.cpp */; };
+		C5AB8B50D35A9CFA693BD133 /* SoundEngine_android.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 028460605A60AE1F598744D3 /* SoundEngine_android.cpp */; };
 		C5AF6FDE50D949A5AC88B46D /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DE1E5F7D97DF98BEBDC09572 /* ChessEngine.cpp */; };
 		C5F80943154E9FFE5177DC14 /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 405D8B661B36DD63A8EDDF2C /* NativeChessModuleProvider.mm */; };
 		C782523727C9103B3141DAAD /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3702876EB08DED4CD1B1CC50 /* NativeChessModule.cpp */; };
+		C9247C0F6D4800942A32A93E /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A86152605FF79564A81DB7D /* Perft.cpp */; };
 		C9E8C9E7EF5D2B12FE3DAC0F /* victory.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 19F8D3386CAADFD933722BB6 /* victory.mp3 */; };
 		CAC0BA90498D8870AC44514E /* Search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDC2E41A137E662DDACE8FB2 /* Search.cpp */; };
 		CC258E26229365A7264D7A2A /* SoundEngine_android.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F452395346237F6A8414CFEB /* SoundEngine_android.cpp */; };
@@ -130,6 +147,7 @@
 		D6414531A6FDDE1F9B3C4FCF /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 295848C5B33AADC00D80E67C /* TranspositionTable.cpp */; };
 		D6A0E7D7BFB26AEE0C87DFEC /* capture.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F55000EDCE1593C8B791C91A /* capture.mp3 */; };
 		DA4639767BB38B28039EFF18 /* Perft.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C80391D41846AD64C16591E8 /* Perft.cpp */; };
+		DE4DEBD47FB2AFD735EFAD0E /* NativeChessModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F0F66A6DED86DB4FF7331CD /* NativeChessModule.cpp */; };
 		DEA39341D76FC3C82877D19F /* Evaluation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0908738735F9311B047C43EA /* Evaluation.cpp */; };
 		E0ED535EE3C91A9C7E6EB6AB /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FD7B7E8F38A043B4CF876131 /* Attacks.cpp */; };
 		E4C3330F634E3B254C3594D8 /* Attacks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 82DACE04BF32AFD53FEB2E5D /* Attacks.cpp */; };
@@ -137,6 +155,7 @@
 		E8C196B3A428316BE404A91F /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 75F9B6D999CF65ADEF7A0878 /* NativeChessModuleProvider.mm */; };
 		E9272ED756B1BB82BA063575 /* check.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A4529CC198DF90A8A0125708 /* check.mp3 */; };
 		EBBF50F0C358BCB5D5F39EA8 /* TranspositionTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B22275611474BC5CBD547FD7 /* TranspositionTable.cpp */; };
+		EC739CC92375D03A1682A722 /* MoveGen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7A7183774832BA629F2CA6B5 /* MoveGen.cpp */; };
 		ED8B8BB476A2AB5EE2F99BAD /* NativeChessModuleProvider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 60099FE9C5570A8226A6C961 /* NativeChessModuleProvider.mm */; };
 		EFDD49AC6818B09A4606B484 /* ChessEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 31DD6CD3FE91EE764E36355A /* ChessEngine.cpp */; };
 		F111F19C21477D7AD1B01210 /* OpeningBook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3FE8DE66F41C47CAFE158D1B /* OpeningBook.cpp */; };
@@ -156,6 +175,7 @@
 		00B878E3A058E8364BAEC54F /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
 		00C6570EDB6F89797F80CB7C /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 		0263C426FE8A0F7F8A044CAC /* castle.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = castle.mp3; path = ../assets/sounds/castle.mp3; sourceTree = "<group>"; };
+		028460605A60AE1F598744D3 /* SoundEngine_android.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = SoundEngine_android.cpp; path = ../shared/SoundEngine_android.cpp; sourceTree = "<group>"; };
 		041102D0CC2D8DA526DC743A /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
 		042A5BC3365E696DB838950B /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
 		044ED0AE0418129C989F2902 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
@@ -168,6 +188,7 @@
 		0DC4A10E7B8BFD17A3C0B7FF /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		11825715A192AE9598A1E860 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
 		1205EE3C6082B94F141EB717 /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
+		12D9D0FAAFE635667DC031DE /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		134ECC6CA437DBE35AE9FECF /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* chess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = chess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = chess/Images.xcassets; sourceTree = "<group>"; };
@@ -184,23 +205,33 @@
 		22F5740351DD9C3B1CEBC6FF /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
 		25D41E9A41113BA755CF9810 /* victory.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = victory.mp3; path = ../assets/sounds/victory.mp3; sourceTree = "<group>"; };
 		27F36F45435D2EE93AF15E62 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		294BD42C0E9A713B0B8B1808 /* victory.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = victory.mp3; path = ../assets/sounds/victory.mp3; sourceTree = "<group>"; };
 		295848C5B33AADC00D80E67C /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
+		29ED5352DC40A0228A78C3A6 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		31DD6CD3FE91EE764E36355A /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
+		334E0117D8B4B17F66B900CD /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
 		3702876EB08DED4CD1B1CC50 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-chess.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-chess.debug.xcconfig"; path = "Target Support Files/Pods-chess/Pods-chess.debug.xcconfig"; sourceTree = "<group>"; };
 		3BAE95DDED950E38CB078537 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		3DFB72A1E6FA06CCFCA1BAAD /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		3F0F66A6DED86DB4FF7331CD /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
 		3FE8DE66F41C47CAFE158D1B /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		403677D2701A330791A4E4C7 /* game_end.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = game_end.mp3; path = ../assets/sounds/game_end.mp3; sourceTree = "<group>"; };
 		4039D6276AB80E95EC638174 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		405D8B661B36DD63A8EDDF2C /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
 		4568CF6E65AA2211471F4624 /* SoundEngine_android.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = SoundEngine_android.cpp; path = ../shared/SoundEngine_android.cpp; sourceTree = "<group>"; };
 		471B8F543B52F008303B4EEE /* move.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = move.mp3; path = ../assets/sounds/move.mp3; sourceTree = "<group>"; };
+		48D4AA8CF6C4AF90F97CB9E4 /* check.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = check.mp3; path = ../assets/sounds/check.mp3; sourceTree = "<group>"; };
 		49295476DB95A92364C4D887 /* SoundEngine_android.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = SoundEngine_android.cpp; path = ../shared/SoundEngine_android.cpp; sourceTree = "<group>"; };
+		4A86152605FF79564A81DB7D /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
 		4CBE2D57C43AA2B582C932A1 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
+		4EB245215C22B23BEEF14CAB /* capture.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = capture.mp3; path = ../assets/sounds/capture.mp3; sourceTree = "<group>"; };
 		5127969F38C87305A11BC3D9 /* check.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = check.mp3; path = ../assets/sounds/check.mp3; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-chess.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-chess.release.xcconfig"; path = "Target Support Files/Pods-chess/Pods-chess.release.xcconfig"; sourceTree = "<group>"; };
 		59DD2204E587E6EB2CCA942E /* SoundEngine_android.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = SoundEngine_android.cpp; path = ../shared/SoundEngine_android.cpp; sourceTree = "<group>"; };
+		59FE3469599704EBABFDD2C2 /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
 		5A51B94314779591C556E6D0 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
+		5CE9ADAE32053BC0F335B7BD /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-chess.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-chess.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		60099FE9C5570A8226A6C961 /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
 		605FF905182B40DCBE8E50C0 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
@@ -218,6 +249,7 @@
 		7625A8B41E27B057D738EDF3 /* game_end.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = game_end.mp3; path = ../assets/sounds/game_end.mp3; sourceTree = "<group>"; };
 		77863111020FAD2A65ACE74C /* Evaluation.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Evaluation.cpp; path = ../shared/chess/Evaluation.cpp; sourceTree = "<group>"; };
 		7847C3EC7256A2AE5AE3AB7C /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		7A7183774832BA629F2CA6B5 /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
 		7BD24720ED3C6EEE2CF5F7AA /* SoundEngine_ios.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = SoundEngine_ios.mm; path = ../shared/SoundEngine_ios.mm; sourceTree = "<group>"; };
 		7C1DDBA9F9923617416B7E0B /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		7DB057DE08E2A38C59144C86 /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
@@ -244,7 +276,9 @@
 		A31855B158102CECFCFD9BC6 /* capture.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = capture.mp3; path = ../assets/sounds/capture.mp3; sourceTree = "<group>"; };
 		A349440ED78E1B6F6A3C3BC3 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
 		A3861888055B0E74816FB520 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		A4470E5D3D0861FA43B4CB2E /* move.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = move.mp3; path = ../assets/sounds/move.mp3; sourceTree = "<group>"; };
 		A4529CC198DF90A8A0125708 /* check.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = check.mp3; path = ../assets/sounds/check.mp3; sourceTree = "<group>"; };
+		A48E07CCCE39B08C6FBE3C75 /* OpeningBook_iOS.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = OpeningBook_iOS.mm; path = ../shared/chess/OpeningBook_iOS.mm; sourceTree = "<group>"; };
 		A6055583FCEAF1A4C9431C28 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		A7037C5407E25C483E6BEFE6 /* NativeChessModuleProvider.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = NativeChessModuleProvider.mm; path = chess/NativeChessModuleProvider.mm; sourceTree = "<group>"; };
 		A743A2B5014B472AC087F9ED /* MoveGen.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = MoveGen.cpp; path = ../shared/chess/MoveGen.cpp; sourceTree = "<group>"; };
@@ -268,6 +302,7 @@
 		C85BB1A906874D3DEB75E1F8 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 		C8D217D20F78B222AC61BB63 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
 		CCD314CFE197C09256E322E7 /* game_end.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = game_end.mp3; path = ../assets/sounds/game_end.mp3; sourceTree = "<group>"; };
+		CEBB1035C33059134FB53E74 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 		D13EB8171354D77C1E3DCABC /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		D562792367A4D8C76195DD44 /* TranspositionTable.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = TranspositionTable.cpp; path = ../shared/chess/TranspositionTable.cpp; sourceTree = "<group>"; };
 		D65C6AD6014D11CB51D4EE7F /* game_end.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = game_end.mp3; path = ../assets/sounds/game_end.mp3; sourceTree = "<group>"; };
@@ -292,12 +327,15 @@
 		F452395346237F6A8414CFEB /* SoundEngine_android.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = SoundEngine_android.cpp; path = ../shared/SoundEngine_android.cpp; sourceTree = "<group>"; };
 		F55000EDCE1593C8B791C91A /* capture.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = capture.mp3; path = ../assets/sounds/capture.mp3; sourceTree = "<group>"; };
 		F69B163300FCA11D6D5726F4 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
+		F7DD06C091DB42B77BC10A5A /* SoundEngine_ios.mm */ = {isa = PBXFileReference; includeInIndex = 1; name = SoundEngine_ios.mm; path = ../shared/SoundEngine_ios.mm; sourceTree = "<group>"; };
 		F829ED5E3DBF44F1BC4EE4F2 /* Perft.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Perft.cpp; path = ../shared/chess/Perft.cpp; sourceTree = "<group>"; };
 		F910803520D6579288632B00 /* NativeChessModule.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = NativeChessModule.cpp; path = ../shared/NativeChessModule.cpp; sourceTree = "<group>"; };
+		FB7715758470A90F290DFB72 /* OpeningBook.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = OpeningBook.cpp; path = ../shared/chess/OpeningBook.cpp; sourceTree = "<group>"; };
 		FCDE6F28641D2B5AD32F0014 /* ChessEngine.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = ChessEngine.cpp; path = ../shared/chess/ChessEngine.cpp; sourceTree = "<group>"; };
 		FD7B7E8F38A043B4CF876131 /* Attacks.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Attacks.cpp; path = ../shared/chess/Attacks.cpp; sourceTree = "<group>"; };
 		FDC2E41A137E662DDACE8FB2 /* Search.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = ../shared/chess/Search.cpp; sourceTree = "<group>"; };
 		FE0B1E2C3A4D5E6F7A8B9C0D /* performance.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.binary; name = performance.bin; path = chess/performance.bin; sourceTree = "<group>"; };
+		FE1C2E3A598C15BE55486C98 /* castle.mp3 */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = audio.mp3; name = castle.mp3; path = ../assets/sounds/castle.mp3; sourceTree = "<group>"; };
 		FE2C3D4E5F6A7B8C9D0E1F2A /* OpeningBook_iOS.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; name = OpeningBook_iOS.mm; path = ../shared/chess/OpeningBook_iOS.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -484,6 +522,25 @@
 				7625A8B41E27B057D738EDF3 /* game_end.mp3 */,
 				8BF38A22A74949073A4617F9 /* check.mp3 */,
 				07A49646E798633C7D616EF3 /* castle.mp3 */,
+				3F0F66A6DED86DB4FF7331CD /* NativeChessModule.cpp */,
+				F7DD06C091DB42B77BC10A5A /* SoundEngine_ios.mm */,
+				CEBB1035C33059134FB53E74 /* Attacks.cpp */,
+				59FE3469599704EBABFDD2C2 /* TranspositionTable.cpp */,
+				4A86152605FF79564A81DB7D /* Perft.cpp */,
+				FB7715758470A90F290DFB72 /* OpeningBook.cpp */,
+				29ED5352DC40A0228A78C3A6 /* Search.cpp */,
+				A48E07CCCE39B08C6FBE3C75 /* OpeningBook_iOS.mm */,
+				12D9D0FAAFE635667DC031DE /* ChessEngine.cpp */,
+				7A7183774832BA629F2CA6B5 /* MoveGen.cpp */,
+				5CE9ADAE32053BC0F335B7BD /* Evaluation.cpp */,
+				028460605A60AE1F598744D3 /* SoundEngine_android.cpp */,
+				334E0117D8B4B17F66B900CD /* NativeChessModuleProvider.mm */,
+				4EB245215C22B23BEEF14CAB /* capture.mp3 */,
+				294BD42C0E9A713B0B8B1808 /* victory.mp3 */,
+				A4470E5D3D0861FA43B4CB2E /* move.mp3 */,
+				403677D2701A330791A4E4C7 /* game_end.mp3 */,
+				48D4AA8CF6C4AF90F97CB9E4 /* check.mp3 */,
+				FE1C2E3A598C15BE55486C98 /* castle.mp3 */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -589,6 +646,12 @@
 				B34E33675777B25475858189 /* game_end.mp3 in Resources */,
 				C408E4A473D285F8A99B9BD3 /* check.mp3 in Resources */,
 				4E3D34A8E3F71FED3CB08644 /* castle.mp3 in Resources */,
+				80BCDA28DA83E5FDBD6E86F8 /* capture.mp3 in Resources */,
+				05DABEA0F1C6233179E3AF1F /* victory.mp3 in Resources */,
+				AC64F219C093B7B997916E3D /* move.mp3 in Resources */,
+				7825C07B649B22BBFFA3ECBD /* game_end.mp3 in Resources */,
+				9864B1427645EB6A84E2A0BA /* check.mp3 in Resources */,
+				6DEA055CF6AF77B657C2B090 /* castle.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -793,6 +856,19 @@
 				7EBD2A9C024C46AA4E07AFA7 /* Evaluation.cpp in Sources */,
 				49F60C6A34815B6235BADC85 /* SoundEngine_android.cpp in Sources */,
 				C5F80943154E9FFE5177DC14 /* NativeChessModuleProvider.mm in Sources */,
+				DE4DEBD47FB2AFD735EFAD0E /* NativeChessModule.cpp in Sources */,
+				988DD1346FB16328AE955358 /* SoundEngine_ios.mm in Sources */,
+				36D8A2BCB0966E7C0CA96373 /* Attacks.cpp in Sources */,
+				305C612A6D5CD061F19756BA /* TranspositionTable.cpp in Sources */,
+				C9247C0F6D4800942A32A93E /* Perft.cpp in Sources */,
+				A0D1CB397C6BF9810D228FDF /* OpeningBook.cpp in Sources */,
+				7DAA5C6EE43250DE7BF608CD /* Search.cpp in Sources */,
+				26E52531AE65C53D0AD9F4CD /* OpeningBook_iOS.mm in Sources */,
+				7BD0068332191D058853E79B /* ChessEngine.cpp in Sources */,
+				EC739CC92375D03A1682A722 /* MoveGen.cpp in Sources */,
+				2C286FAF1C16C1E5168D1334 /* Evaluation.cpp in Sources */,
+				C5AB8B50D35A9CFA693BD133 /* SoundEngine_android.cpp in Sources */,
+				8F963CF6BB19E340E06A865A /* NativeChessModuleProvider.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

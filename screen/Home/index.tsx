@@ -57,7 +57,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
 
   const handleDifficultySelect = (difficulty: DifficultyLevel) => {
     setShowDifficultyModal(false);
-    navigation.navigate('Game', { gameMode: 'computer', difficulty });
+    navigation.navigate('BoardColor', { gameMode: 'computer', difficulty });
   };
 
   return (
@@ -84,7 +84,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
               <View style={[styles.playerDot, styles.playerDotBlack]} />
             </View>
           }
-          onPress={() => navigation.navigate('Game', { gameMode: 'players' })}
+          onPress={() => navigation.navigate('BoardColor', { gameMode: 'players' })}
         />
 
         <ModeCard

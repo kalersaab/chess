@@ -111,4 +111,8 @@ bool NativeChessModule::hasBookMoves(jsi::Runtime &rt) {
     return ::hasBookMoves(snap);
 }
 
+bool NativeChessModule::isThreefoldRepetition(jsi::Runtime &rt) {
+    return engine->isThreefoldRepetition();
+}
+
 }

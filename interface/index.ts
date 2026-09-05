@@ -16,6 +16,7 @@ export interface PieceProps {
   id: keyof typeof PIECES;
   position: Position;
   onMoveEnd: (isCheckmate?: boolean) => void;
+  onDrawByRepetition?: () => void;
   currentTurn: PIECE_COLOR;
   board: string[][];
 }

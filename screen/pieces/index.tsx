@@ -39,7 +39,7 @@ const playMoveSound = (result: string, move: string, boardSnapshot: string[][]) 
   NativeChessModule.playSound('move');
 };
 
-const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
+const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board }: PieceProps) => {
   const translateX = useSharedValue(position.x * SIZE);
   const translateY = useSharedValue(position.y * SIZE);
   const scale = useSharedValue(1);
@@ -84,6 +84,17 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
         translateX.value = withTiming(toX * SIZE, { duration: 200 });
         translateY.value = withTiming(toY * SIZE, { duration: 200 });
         const isCheckmate = result === CHECK_STATUS.checkmate;
+        
+        if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
+          onMoveEnd(false);
+          Alert.alert(
+            'Draw',
+            'Game drawn by threefold repetition!',
+            [{ text: 'New Game', onPress: () => onDrawByRepetition?.() }]
+          );
+          return;
+        }
+        
         onMoveEnd(isCheckmate);
         if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
       }
@@ -104,6 +115,18 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
       translateX.value = withTiming(toX * SIZE, { duration: 200 });
       translateY.value = withTiming(toY * SIZE, { duration: 200 });
       const isCheckmate = result === CHECK_STATUS.checkmate;
+      
+      // Check for threefold repetition
+      if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
+        onMoveEnd(false);
+        Alert.alert(
+          'Draw',
+          'Game drawn by threefold repetition!',
+          [{ text: 'New Game', onPress: () => onDrawByRepetition?.() }]
+        );
+        return;
+      }
+      
       onMoveEnd(isCheckmate);
       if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
@@ -151,6 +174,18 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
       translateX.value = withTiming(newX * SIZE);
       translateY.value = withTiming(newY * SIZE);
       const isCheckmate = result === CHECK_STATUS.checkmate;
+      
+      // Check for threefold repetition
+      if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
+        onMoveEnd(false);
+        Alert.alert(
+          'Draw',
+          'Game drawn by threefold repetition!',
+          [{ text: 'New Game', onPress: () => onDrawByRepetition?.() }]
+        );
+        return;
+      }
+      
       onMoveEnd(isCheckmate);
       if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
@@ -166,6 +201,20 @@ const Piece = ({ id, position, onMoveEnd, currentTurn, board }: PieceProps) => {
       playMoveSound(result, moveWithPromotion, board);
       translateX.value = withTiming(promotion!.newX * SIZE);
       translateY.value = withTiming(promotion!.newY * SIZE);
+      
+      // Check for threefold repetition
+      const isCheckmate = result === CHECK_STATUS.checkmate;
+      if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
+        onMoveEnd(false);
+        setPromotion({ visible: false, move: '', newX: 0, newY: 0 });
+        Alert.alert(
+          'Draw',
+          'Game drawn by threefold repetition!',
+          [{ text: 'New Game', onPress: () => onDrawByRepetition?.() }]
+        );
+        return;
+      }
+      
       onMoveEnd();
     } else {
       translateX.value = withTiming(position.x * SIZE);

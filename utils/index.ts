@@ -41,7 +41,7 @@ export const formatTime = (seconds: number) => {
 }
 
 export type DifficultyLevel = 'easy' | 'normal' | 'hard';
-export type GameMode = 'players' | 'computer';
+export type GameMode = 'players' | 'computer' | 'online';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, { label: string; depth: number }> = {
   easy: { label: 'Easy', depth: 2 },

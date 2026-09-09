@@ -8,6 +8,8 @@ import HomeScreen from './screen/Home';
 import BoardColorScreen from './screen/BoardColor';
 import Board from './screen/board';
 import PrivacyPolicyScreen from './screen/PrivacyPolicy';
+import LoginScreen from './screen/Auth/LoginScreen';
+import SignupScreen from './screen/Auth/SignupScreen';
 import { RootStackParamList } from './navigation/types';
 import { ClockProvider } from './context/ClockContext';
 import { BoardColorProvider } from './context/BoardColorContext';
@@ -30,6 +32,8 @@ function App() {
                 }}
               >
                 <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Signup" component={SignupScreen} />
                 <Stack.Screen name="BoardColor" component={BoardColorScreen} />
                 <Stack.Screen name="Game" component={Board} />
                 <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

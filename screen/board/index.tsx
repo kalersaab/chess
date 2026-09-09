@@ -27,6 +27,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { BOARD_COLOR_THEMES, BoardColorTheme } from '../BoardColor';
 import { useClock } from '../../context/ClockContext';
 import { useBoardColor } from '../../context/BoardColorContext';
+import { ChessWebSocketClient, WSConnectionStatus, coordsToSquare } from '../../services/websocket';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CELL_SIZE = SIZE;
@@ -63,7 +64,7 @@ interface MoveTableProps {
 }
 const MoveTable = React.memo(({ moves, currentMoveIdx, onMovePress }: MoveTableProps) => {
   const flatListRef = useRef<FlatList>(null);
-  
+
   const pairs = useMemo(() => {
     const result: [string, string | null][] = [];
     for (let i = 0; i < moves.length; i += 2) {
@@ -82,7 +83,7 @@ const MoveTable = React.memo(({ moves, currentMoveIdx, onMovePress }: MoveTableP
     const [white, black] = item;
     const whiteIdx = index * 2;
     const blackIdx = index * 2 + 1;
-    
+
     return (
       <View style={styles.movePair}>
         <Text style={styles.moveNum}>{index + 1}.</Text>
@@ -133,9 +134,20 @@ const MoveTable = React.memo(({ moves, currentMoveIdx, onMovePress }: MoveTableP
 
 interface BoardInnerProps extends BoardProps {
   boardColorTheme?: BoardColorTheme;
+  onlineGameId?: string;
+  playerColor?: 'white' | 'black';
+  playerName?: string;
 }
 
-function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal', boardColorTheme = 'classic' }: BoardInnerProps) {
+function BoardInner({
+  gameMode,
+  initialTimeSeconds = 600,
+  difficulty = 'normal',
+  boardColorTheme = 'classic',
+  onlineGameId,
+  playerColor = 'white',
+  playerName = 'Player',
+}: BoardInnerProps) {
   const navigation = useNavigation();
   const clockContext = useClock();
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
@@ -147,12 +159,24 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
   const [currentMoveIdx, setCurrentMoveIdx] = useState(-1);
   const [showFenModal, setShowFenModal] = useState(false);
   const [fenInput, setFenInput] = useState('');
-  
+
+  // Online WebSocket state
+  const wsClientRef = useRef<ChessWebSocketClient | null>(null);
+  const [wsStatus, setWsStatus] = useState<WSConnectionStatus>('disconnected');
+  const [assignedRole, setAssignedRole] = useState<'white' | 'black' | 'spectator'>(playerColor || 'white');
+  // Track the last move this client sent so we can ignore the echo from MOVE_MADE
+  const lastSentMoveRef = useRef<string | null>(null);
+  const [, setRoomInfo] = useState<{ white: number; black: number; spectators: number }>({
+    white: 0,
+    black: 0,
+    spectators: 0,
+  });
+
   const whiteTimeSeconds = clockContext.whiteTime;
   const blackTimeSeconds = clockContext.blackTime;
   const setWhiteTimeSeconds = clockContext.setWhiteTime;
   const setBlackTimeSeconds = clockContext.setBlackTime;
-  
+
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerInitializedRef = useRef(false);
   const computerDepth = getDifficultyDepth(difficulty);
@@ -184,6 +208,85 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     };
   }, []);
 
+  // WebSocket Connection Effect
+  useEffect(() => {
+    if (gameMode !== 'online' || !onlineGameId) return;
+    console.log(`[Board] Connecting to WebSocket for game ID: ${onlineGameId}, player: ${playerName}, role: ${playerColor}`);
+
+    const ws = new ChessWebSocketClient();
+    wsClientRef.current = ws;
+
+    ws.setCallbacks({
+      onStatusChange: (status) => {
+        setWsStatus(status);
+      },
+      onConnected: (payload) => {
+        setWsStatus('connected');
+        if (payload.role) {
+          setAssignedRole(payload.role);
+        }
+        setRoomInfo({
+          white: payload.whiteCount,
+          black: payload.blackCount,
+          spectators: payload.spectatorCount,
+        });
+      },
+      onMoveMade: (payload) => {
+        const fromSq = coordsToSquare(payload.move.from);
+        const toSq = coordsToSquare(payload.move.to);
+        const promo = payload.move.promotion ? payload.move.promotion[0].toLowerCase() : '';
+        const moveStr = `${fromSq}${toSq}${promo}`;
+
+        // Skip if this is our own move echoed back (backend should already exclude us,
+        // but guard here as a safety net against race conditions / reconnects)
+        if (lastSentMoveRef.current === moveStr) {
+          lastSentMoveRef.current = null;
+          return;
+        }
+
+        NativeChessModule.makeMove(moveStr).then((result) => {
+          if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
+            if (result === CHECK_STATUS.checkmate) NativeChessModule.playSound('victory');
+            else if (result === CHECK_STATUS.check) NativeChessModule.playSound('check');
+            else NativeChessModule.playSound('move');
+            refreshBoard(result === CHECK_STATUS.checkmate);
+          }
+        });
+      },
+      onGameReset: (payload) => {
+        NativeChessModule.reset();
+        refreshBoard();
+        Alert.alert('Game Reset', `The game was reset by ${payload.resetBy || 'opponent'}`);
+      },
+      onPlayerJoined: (payload) => {
+        setRoomInfo((prev) => ({
+          ...prev,
+          white: payload.role === 'white' ? 1 : prev.white,
+          black: payload.role === 'black' ? 1 : prev.black,
+          spectators: payload.role === 'spectator' ? prev.spectators + 1 : prev.spectators,
+        }));
+      },
+      onPlayerLeft: (payload) => {
+        setRoomInfo((prev) => ({
+          ...prev,
+          white: payload.role === 'white' ? 0 : prev.white,
+          black: payload.role === 'black' ? 0 : prev.black,
+          spectators: payload.role === 'spectator' ? Math.max(0, prev.spectators - 1) : prev.spectators,
+        }));
+      },
+      onError: (err, details) => {
+        Alert.alert('Online Game', details ? `${err}: ${details}` : err);
+      },
+    });
+
+    ws.connect(onlineGameId, playerColor, playerName);
+
+    return () => {
+      ws.disconnect();
+      wsClientRef.current = null;
+    };
+  }, [gameMode, onlineGameId, playerColor, playerName, refreshBoard]);
+
   useEffect(() => {
     if (gameMode !== 'players') return;
     if (gameOver) return;
@@ -196,12 +299,12 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     timerIntervalRef.current = setInterval(() => {
       const whiteTicks = NativeChessModule.getWhiteTime();
       const blackTicks = NativeChessModule.getBlackTime();
-      
+
       setWhiteTimeSeconds(whiteTicks);
       setBlackTimeSeconds(blackTicks);
 
       const isWhiteTurn = turn === PIECE_COLOR.white;
-      const timeRemains = NativeChessModule.tick(isWhiteTurn, 1);
+      const timeRemains = NativeChessModule.tick(isWhiteTurn);
 
       if (!timeRemains) {
         setGameOver(true);
@@ -238,22 +341,22 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
 
       try {
         const bestMovePromise = NativeChessModule.getBestMove(false, computerDepth);
-        const timeoutPromise = new Promise((_, reject) => 
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('AI timeout')), 30000)
         );
-        
+
         const bestMove = await Promise.race([bestMovePromise, timeoutPromise]) as string;
-        
+
         if (!isMounted) return;
-        
+
         if (bestMove) {
           const boardSnapshot = NativeChessModule.getBoard();
           const result = await NativeChessModule.makeMove(bestMove);
-          
+
           if (!isMounted) return;
-          
+
           setLastAiMove({ from: bestMove.slice(0, 2), to: bestMove.slice(2, 4) });
-          
+
           Promise.resolve().then(() => {
             if (!isMountedRef.current) return;
             setBoard(NativeChessModule.getBoard());
@@ -268,7 +371,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
               setBookMoveInfo(null);
             }
           });
-          
+
           if (result === CHECK_STATUS.checkmate) {
             NativeChessModule.playSound('victory');
             setGameOver(true);
@@ -283,7 +386,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
             );
           } else {
             const from = bestMove.slice(0, 2);
-            const to   = bestMove.slice(2, 4);
+            const to = bestMove.slice(2, 4);
             const isCastle =
               (from === 'e1' && (to === 'g1' || to === 'c1')) ||
               (from === 'e8' && (to === 'g8' || to === 'c8'));
@@ -293,12 +396,12 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
               const toX = to.charCodeAt(0) - 97;
               const toY = 8 - parseInt(to[1], 10);
               const wasOccupied = !!(boardSnapshot[toY]?.[toX]);
-              if (result === CHECK_STATUS.check)  NativeChessModule.playSound('check');
-              else if (wasOccupied)               NativeChessModule.playSound('capture');
-              else                                NativeChessModule.playSound('move');
+              if (result === CHECK_STATUS.check) NativeChessModule.playSound('check');
+              else if (wasOccupied) NativeChessModule.playSound('capture');
+              else NativeChessModule.playSound('move');
             }
           }
-          
+
           if (isMounted) {
             setIsComputerThinking(false);
           }
@@ -329,8 +432,20 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       if (result === CHECK_STATUS.checkmate) NativeChessModule.playSound('victory');
       else if (result === CHECK_STATUS.check) NativeChessModule.playSound('check');
       else NativeChessModule.playSound('move');
-      refreshBoard();
-      
+      refreshBoard(result === CHECK_STATUS.checkmate);
+
+      if (gameMode === 'online' && wsClientRef.current) {
+        const moveWithPromo = pendingPromotion.move + piece;
+        const from = moveWithPromo.slice(0, 2);
+        const to = moveWithPromo.slice(2, 4);
+        const promo = moveWithPromo.length > 4 ? moveWithPromo.slice(4) : undefined;
+
+        // Record so onMoveMade can ignore the echo
+        lastSentMoveRef.current = moveWithPromo;
+        debugger
+        wsClientRef.current.sendMove(from, to, promo);
+      }
+
       // Check for threefold repetition
       if (result !== CHECK_STATUS.checkmate && NativeChessModule.isThreefoldRepetition()) {
         setGameOver(true);
@@ -344,7 +459,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       }
     }
     setPendingPromotion(null);
-  }, [pendingPromotion, refreshBoard]);
+  }, [pendingPromotion, refreshBoard, gameMode]);
 
   const handleSquareTap = useCallback((toSquare: string) => {
     if (!selectedSquare) return;
@@ -355,6 +470,23 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     }
     setPendingMoveTarget(toSquare);
   }, [selectedSquare, clearSelection, promotionSquares, setPendingMoveTarget]);
+
+  const handleMoveEnd = useCallback(
+    (isCheckmate = false, moveMade?: string) => {
+      refreshBoard(isCheckmate);
+
+      if (gameMode === 'online' && moveMade && wsClientRef.current) {
+        const from = moveMade.slice(0, 2);
+        const to = moveMade.slice(2, 4);
+        const promo = moveMade.length > 4 ? moveMade.slice(4) : undefined;
+        // Record this move so onMoveMade can ignore the echo if the server sends it back
+        lastSentMoveRef.current = moveMade;
+        debugger
+        wsClientRef.current.sendMove(from, to, promo);
+      }
+    },
+    [gameMode, refreshBoard]
+  );
 
   const resetGame = useCallback(() => {
     setIsComputerThinking(false);
@@ -367,7 +499,11 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     NativeChessModule.reset();
     NativeChessModule.resetTimer();
     refreshBoard();
-  }, [refreshBoard, initialTimeSeconds, clockContext]);
+
+    if (gameMode === 'online' && wsClientRef.current) {
+      wsClientRef.current.sendReset();
+    }
+  }, [refreshBoard, initialTimeSeconds, clockContext, gameMode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -376,10 +512,10 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
           'Quit game',
           'Are you sure you want to go back? The current game will be lost.',
           [
-            { text: 'Cancel', style: 'cancel', onPress: () => {} },
-            { 
-              text: 'Quit', 
-              style: 'destructive', 
+            { text: 'Cancel', style: 'cancel', onPress: () => { } },
+            {
+              text: 'Quit',
+              style: 'destructive',
               onPress: () => {
                 // Reset game state
                 setIsComputerThinking(false);
@@ -391,13 +527,13 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
                 timerInitializedRef.current = false;
                 NativeChessModule.reset();
                 NativeChessModule.resetTimer();
-                
+
                 // Use reset to go back to Home and clear the entire stack
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Home' }],
                 });
-              } 
+              }
             },
           ],
         );
@@ -424,16 +560,16 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       'Are you sure you want to go back? The current game will be lost.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Quit', 
-          style: 'destructive', 
-          onPress: () => { 
+        {
+          text: 'Quit',
+          style: 'destructive',
+          onPress: () => {
             resetGame();
             navigation.reset({
               index: 0,
               routes: [{ name: 'Home' }],
             });
-          } 
+          }
         },
       ],
     );
@@ -466,7 +602,18 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     }
   }, [fenInput, refreshBoard, initialTimeSeconds]);
 
-  const humanTurn = gameMode === 'computer' ? turn === PIECE_COLOR.white && !isComputerThinking : true;
+  const isOnlineTurn =
+    gameMode === 'online'
+      ? (assignedRole === 'white' && turn === PIECE_COLOR.white) ||
+      (assignedRole === 'black' && turn === PIECE_COLOR.black)
+      : true;
+
+  const humanTurn =
+    gameMode === 'computer'
+      ? turn === PIECE_COLOR.white && !isComputerThinking
+      : gameMode === 'online'
+        ? isOnlineTurn && wsStatus === 'connected'
+        : true;
 
   return (
     <View style={styles.wrapper}>
@@ -477,7 +624,11 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>
-            {gameMode === 'computer' ? 'vs Computer' : 'vs Player'}
+            {gameMode === 'computer'
+              ? 'vs Computer'
+              : gameMode === 'online'
+                ? 'Online Match'
+                : 'vs Player'}
           </Text>
           {gameMode === 'computer' && (
             <Text style={styles.difficultyIndicator}>
@@ -501,6 +652,43 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
           <Text style={styles.resetIconText}>↺</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Online Status Bar */}
+      {gameMode === 'online' && (
+        <View style={styles.onlineStatusBar}>
+          <View style={styles.onlineStatusLeft}>
+            <View
+              style={[
+                styles.statusDot,
+                wsStatus === 'connected'
+                  ? styles.statusDotConnected
+                  : wsStatus === 'connecting' || wsStatus === 'reconnecting'
+                    ? styles.statusDotConnecting
+                    : styles.statusDotDisconnected,
+              ]}
+            />
+            <Text style={styles.onlineStatusText}>
+              {wsStatus === 'connected'
+                ? `Role: ${assignedRole.toUpperCase()}${(assignedRole === 'white' && turn === PIECE_COLOR.white) ||
+                  (assignedRole === 'black' && turn === PIECE_COLOR.black)
+                  ? ' (Your Turn)'
+                  : ' (Opponent Turn)'
+                }`
+                : wsStatus === 'connecting'
+                  ? 'Connecting…'
+                  : wsStatus === 'reconnecting'
+                    ? 'Reconnecting…'
+                    : 'Disconnected'}
+            </Text>
+          </View>
+          <View style={styles.onlineStatusRight}>
+            <Text style={styles.roomCodeLabel}>ID: </Text>
+            <Text style={styles.roomCodeText} numberOfLines={1}>
+              {onlineGameId ? onlineGameId.slice(0, 8) + '…' : ''}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {gameMode === 'players' && (
         <Clock
@@ -530,7 +718,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
                 id={piece as any}
                 currentTurn={humanTurn ? turn : (null as any)}
                 board={board}
-                onMoveEnd={refreshBoard}
+                onMoveEnd={handleMoveEnd}
                 onDrawByRepetition={resetGame}
               />
             );
@@ -591,13 +779,20 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
 }
 
 export default function Board({ route }: NativeStackScreenProps<RootStackParamList, 'Game'>) {
-  const { gameMode, difficulty, boardColorTheme } = route.params;
+  const { gameMode, difficulty, boardColorTheme, onlineGameId, playerColor, playerName } = route.params;
   const { boardColorTheme: contextTheme } = useBoardColor();
   const theme = boardColorTheme || contextTheme;
 
   return (
     <SelectionProvider>
-      <BoardInner gameMode={gameMode} difficulty={difficulty} boardColorTheme={theme} />
+      <BoardInner
+        gameMode={gameMode}
+        difficulty={difficulty}
+        boardColorTheme={theme}
+        onlineGameId={onlineGameId}
+        playerColor={playerColor}
+        playerName={playerName}
+      />
     </SelectionProvider>
   );
 }
@@ -799,4 +994,57 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  // Online Status Bar styles
+  onlineStatusBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1c1b18',
+    borderColor: '#38bdf844',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginHorizontal: 12,
+    marginBottom: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  onlineStatusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusDotConnected: {
+    backgroundColor: '#22c55e',
+  },
+  statusDotConnecting: {
+    backgroundColor: '#eab308',
+  },
+  statusDotDisconnected: {
+    backgroundColor: '#ef4444',
+  },
+  onlineStatusText: {
+    color: '#f0d9b5',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  onlineStatusRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  roomCodeLabel: {
+    color: '#888',
+    fontSize: 11,
+  },
+  roomCodeText: {
+    color: '#38bdf8',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    maxWidth: 90,
+  },
 });
+

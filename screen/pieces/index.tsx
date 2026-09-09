@@ -79,6 +79,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
 
     const runMove = async () => {
       const result = await NativeChessModule.makeMove(`${mySquare}${toSq}`);
+      debugger
       if (result === CHECK_STATUS.valid || result === CHECK_STATUS.checkmate || result === CHECK_STATUS.check) {
         playMoveSound(result, `${mySquare}${toSq}`, board);
         translateX.value = withTiming(toX * SIZE, { duration: 200 });
@@ -86,7 +87,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
         const isCheckmate = result === CHECK_STATUS.checkmate;
         
         if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
-          onMoveEnd(false);
+          onMoveEnd(false, `${mySquare}${toSq}`);
           Alert.alert(
             'Draw',
             'Game drawn by threefold repetition!',
@@ -95,7 +96,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
           return;
         }
         
-        onMoveEnd(isCheckmate);
+        onMoveEnd(isCheckmate, `${mySquare}${toSq}`);
         if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
       }
     };
@@ -118,7 +119,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
       
       // Check for threefold repetition
       if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
-        onMoveEnd(false);
+        onMoveEnd(false, move);
         Alert.alert(
           'Draw',
           'Game drawn by threefold repetition!',
@@ -127,7 +128,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
         return;
       }
       
-      onMoveEnd(isCheckmate);
+      onMoveEnd(isCheckmate, move);
       if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
       translateX.value = withTiming(position.x * SIZE);
@@ -177,7 +178,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
       
       // Check for threefold repetition
       if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
-        onMoveEnd(false);
+        onMoveEnd(false, move);
         Alert.alert(
           'Draw',
           'Game drawn by threefold repetition!',
@@ -185,8 +186,8 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
         );
         return;
       }
-      
-      onMoveEnd(isCheckmate);
+
+      onMoveEnd(isCheckmate, move);
       if (isCheckmate) Alert.alert('Checkmate', `${currentTurn} wins!`);
     } else {
       translateX.value = withTiming(position.x * SIZE);
@@ -205,7 +206,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
       // Check for threefold repetition
       const isCheckmate = result === CHECK_STATUS.checkmate;
       if (!isCheckmate && NativeChessModule.isThreefoldRepetition()) {
-        onMoveEnd(false);
+        onMoveEnd(false, moveWithPromotion);
         setPromotion({ visible: false, move: '', newX: 0, newY: 0 });
         Alert.alert(
           'Draw',
@@ -215,7 +216,7 @@ const Piece = ({ id, position, onMoveEnd, onDrawByRepetition, currentTurn, board
         return;
       }
       
-      onMoveEnd();
+      onMoveEnd(isCheckmate, moveWithPromotion);
     } else {
       translateX.value = withTiming(position.x * SIZE);
       translateY.value = withTiming(position.y * SIZE);

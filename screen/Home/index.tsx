@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -7,10 +8,13 @@ import {
   Dimensions,
   Image,
   Modal,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PIECES, BOARD_SIZE, DifficultyLevel, DIFFICULTY_LEVELS } from '../../utils';
 import { RootStackParamList } from '../../navigation/types';
+import { getToken, getUsername, clearToken } from '../../services/auth';
+import OnlineLobbyModal from './OnlineLobbyModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CONTENT_WIDTH = Math.min(SCREEN_WIDTH - 40, 520);
@@ -50,6 +54,23 @@ const ModeCard = ({
 
 export default function HomeScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+  const [showOnlineModal, setShowOnlineModal] = useState(false);
+  const [guestName, setGuestName] = useState('Player');
+
+  const isFocused = useIsFocused();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isFocused) {
+      setIsLoggedIn(!!getToken());
+      const uname = getUsername();
+      setLoggedInUser(uname);
+      if (uname) {
+        setGuestName(uname);
+      }
+    }
+  }, [isFocused]);
 
   const handleComputerPress = () => {
     setShowDifficultyModal(true);
@@ -60,8 +81,47 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
     navigation.navigate('BoardColor', { gameMode: 'computer', difficulty });
   };
 
+  const handleOnlinePress = () => {
+    setShowOnlineModal(true);
+  };
+
+  const handleStartOnlineGame = (gameData: {
+    gameId: string;
+    playerColor: 'white' | 'black';
+    opponentName: string;
+    playerName: string;
+  }) => {
+    setShowOnlineModal(false);
+    navigation.navigate('BoardColor', {
+      gameMode: 'online',
+      onlineGameId: gameData.gameId,
+      playerColor: gameData.playerColor,
+      playerName: gameData.playerName,
+    });
+  };
+
+
+
   return (
     <View style={styles.container}>
+      <View style={styles.headerTopRight}>
+        {isLoggedIn ? (
+          <TouchableOpacity
+            onPress={() => {
+              clearToken();
+              setIsLoggedIn(false);
+              setLoggedInUser(null);
+            }}
+            style={styles.authBtn}
+          >
+            <Text style={styles.authBtnText}>Logout ({loggedInUser})</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.authBtn}>
+            <Text style={styles.authBtnText}>Login</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <Image source={PIECES['K']} style={styles.logoKing} />
@@ -100,6 +160,20 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
           }
           onPress={handleComputerPress}
         />
+
+        <ModeCard
+          title="Play Online"
+          subtitle="Real-time WebSocket multiplayer"
+          accent="#38bdf8"
+          icon={
+            <View style={styles.iconRow}>
+              <Text style={styles.onlineIcon}>🌐</Text>
+              <Text style={styles.iconVs}>⚡</Text>
+              <Text style={styles.onlineIcon}>🎮</Text>
+            </View>
+          }
+          onPress={handleOnlinePress}
+        />
       </View>
       <View style={styles.footer}>
         <TouchableOpacity
@@ -114,7 +188,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
         </TouchableOpacity>
       </View>
 
-      <View style={styles.boardPreview}>
+      <View style={styles.boardPreview} pointerEvents="none">
         {Array.from({ length: 8 }).map((_, row) => (
           <View key={row} style={styles.boardRow}>
             {Array.from({ length: 8 }).map((__, col) => (
@@ -130,6 +204,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
         ))}
       </View>
 
+      {/* Difficulty Modal */}
       <Modal
         visible={showDifficultyModal}
         transparent
@@ -166,6 +241,15 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
           </View>
         </View>
       </Modal>
+
+      {/* Online Lobby Modal — Chess.com-style player search & challenges */}
+      <OnlineLobbyModal
+        visible={showOnlineModal}
+        onClose={() => setShowOnlineModal(false)}
+        currentUsername={loggedInUser || guestName}
+        currentUserId={''}
+        onStartGame={handleStartOnlineGame}
+      />
     </View>
   );
 }
@@ -205,6 +289,25 @@ const styles = StyleSheet.create({
     color: '#888',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  headerTopRight: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 10,
+  },
+  authBtn: {
+    backgroundColor: '#1c1b18',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  authBtnText: {
+    color: '#f0d9b5',
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   section: {
@@ -406,5 +509,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ccc',
   },
+
+  // Online modal & components
+  onlineIcon: {
+    fontSize: 18,
+  },
 });
+
 

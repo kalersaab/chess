@@ -15,7 +15,7 @@ export interface Position {
 export interface PieceProps {
   id: keyof typeof PIECES;
   position: Position;
-  onMoveEnd: (isCheckmate?: boolean) => void;
+  onMoveEnd: (isCheckmate?: boolean, moveMade?: string) => void;
   onDrawByRepetition?: () => void;
   currentTurn: PIECE_COLOR;
   board: string[][];
@@ -45,5 +45,8 @@ export interface BoardProps {
   gameMode: GameMode;
   initialTimeSeconds?: number;
   difficulty?: DifficultyLevel;
+  onlineGameId?: string;
+  playerColor?: 'white' | 'black';
+  playerName?: string;
 }
 

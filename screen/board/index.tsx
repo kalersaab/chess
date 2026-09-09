@@ -442,7 +442,6 @@ function BoardInner({
 
         // Record so onMoveMade can ignore the echo
         lastSentMoveRef.current = moveWithPromo;
-        debugger
         wsClientRef.current.sendMove(from, to, promo);
       }
 
@@ -479,9 +478,7 @@ function BoardInner({
         const from = moveMade.slice(0, 2);
         const to = moveMade.slice(2, 4);
         const promo = moveMade.length > 4 ? moveMade.slice(4) : undefined;
-        // Record this move so onMoveMade can ignore the echo if the server sends it back
         lastSentMoveRef.current = moveMade;
-        debugger
         wsClientRef.current.sendMove(from, to, promo);
       }
     },

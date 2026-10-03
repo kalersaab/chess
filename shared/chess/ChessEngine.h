@@ -40,6 +40,7 @@ private:
 
     std::vector<std::string> pgnMoves;
     int fullMoveNumber;
+    int historyCursor;
 
     std::map<std::string, int> positionHistory;
     std::string getPositionKey() const;

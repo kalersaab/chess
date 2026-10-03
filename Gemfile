@@ -14,3 +14,9 @@ gem 'bigdecimal'
 gem 'logger'
 gem 'benchmark'
 gem 'mutex_m'
+gem 'base64'
+gem 'ostruct'
+# CFPropertyList 3.0.8 is the newest version xcodeproj accepts on Ruby >= 3.2
+# and it still requires 'kconv', which left the standard library. The nkf gem
+# ships a drop-in kconv.rb replacement.
+gem 'nkf'

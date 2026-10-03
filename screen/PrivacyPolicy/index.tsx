@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -13,7 +14,7 @@ const PrivacyPolicyScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      <StatusBar hidden />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}

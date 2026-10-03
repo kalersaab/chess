@@ -121,6 +121,7 @@ void ChessEngine::reset() {
     snap.syncFromString();
     pgnMoves.clear();
     fullMoveNumber = 1;
+    historyCursor = 0;
     resetTimer();
     clearPositionHistory();
 }
@@ -150,6 +151,10 @@ bool ChessEngine::isCheckmate(bool white) {
 
 std::string ChessEngine::makeMove(const std::string &move) {
     std::lock_guard<std::mutex> lock(engineMutex);
+
+    if (historyCursor < (int)pgnMoves.size()) {
+        pgnMoves.erase(pgnMoves.begin() + historyCursor, pgnMoves.end());
+    }
 
     std::string uci = polyglotCastleToUci(snap, move);
     if (uci.length() != 4 && uci.length() != 5) return "invalid";
@@ -329,6 +334,7 @@ std::string ChessEngine::getBestMove(bool white, int depth) {
 
 void ChessEngine::recordMove(const std::string &uci, const std::string &) {
     pgnMoves.push_back(uci);
+    historyCursor = (int)pgnMoves.size();
 }
 
 std::string ChessEngine::getFEN() const {
@@ -449,6 +455,7 @@ bool ChessEngine::loadFEN(const std::string &fen) {
     next.syncFromString();
     snap = next;
     pgnMoves.clear();
+    historyCursor = 0;
     return true;
 }
 
@@ -585,6 +592,7 @@ bool ChessEngine::loadPGN(const std::string &pgn) {
     snap.syncFromString();
     pgnMoves.clear();
     fullMoveNumber = 1;
+    historyCursor = 0;
 
     std::string body = pgn;
     while (true) {
@@ -682,6 +690,7 @@ bool ChessEngine::loadPGN(const std::string &pgn) {
     }
 
     snap.syncToString();
+    historyCursor = (int)pgnMoves.size();
     return true;
 }
 
@@ -708,6 +717,7 @@ bool ChessEngine::goToMove(int index) {
     snap.syncFromString();
     pgnMoves.clear();
     fullMoveNumber = 1;
+    historyCursor = 0;
 
     for (int i = 0; i <= index; i++) {
         const std::string &uci = allMoves[i];
@@ -770,6 +780,7 @@ bool ChessEngine::goToMove(int index) {
     for (int i = index + 1; i < (int)allMoves.size(); i++)
         pgnMoves.push_back(allMoves[i]);
 
+    historyCursor = index + 1;
     snap.syncToString();
     return true;
 }

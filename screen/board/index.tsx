@@ -201,7 +201,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       setBlackTimeSeconds(blackTicks);
 
       const isWhiteTurn = turn === PIECE_COLOR.white;
-      const timeRemains = NativeChessModule.tick(isWhiteTurn, 1);
+      const timeRemains = NativeChessModule.tick(isWhiteTurn);
 
       if (!timeRemains) {
         setGameOver(true);
@@ -409,6 +409,8 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
   );
 
   const handleMovePress = useCallback((index: number) => {
+    clearSelection();
+    setPendingPromotion(null);
     const ok = NativeChessModule.goToMove(index);
     if (ok) {
       setBoard(NativeChessModule.getBoard());
@@ -416,7 +418,7 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       setCurrentMoveIdx(index);
       setLastAiMove(null);
     }
-  }, []);
+  }, [clearSelection]);
 
   const handleBack = useCallback(() => {
     Alert.alert(
@@ -466,7 +468,10 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
     }
   }, [fenInput, refreshBoard, initialTimeSeconds]);
 
-  const humanTurn = gameMode === 'computer' ? turn === PIECE_COLOR.white && !isComputerThinking : true;
+  const isReviewingHistory = moves.length > 0 && currentMoveIdx >= 0 && currentMoveIdx < moves.length - 1;
+  const humanTurn = gameMode === 'computer'
+    ? turn === PIECE_COLOR.white && !isComputerThinking && !isReviewingHistory
+    : !isReviewingHistory;
 
   return (
     <View style={styles.wrapper}>

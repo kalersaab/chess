@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -17,6 +17,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
+      <StatusBar hidden />
       <SafeAreaProvider>
         <BoardColorProvider>
           <ClockProvider>

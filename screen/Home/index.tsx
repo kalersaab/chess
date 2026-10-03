@@ -7,6 +7,7 @@ import {
   Dimensions,
   Image,
   Modal,
+  StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PIECES, BOARD_SIZE, DifficultyLevel, DIFFICULTY_LEVELS } from '../../utils';
@@ -62,6 +63,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
 
   return (
     <View style={styles.container}>
+      <StatusBar hidden />
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <Image source={PIECES['K']} style={styles.logoKing} />

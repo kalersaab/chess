@@ -6,11 +6,15 @@ export type RootStackParamList = {
   BoardColor: {
     gameMode: GameMode;
     difficulty?: DifficultyLevel;
+    fen?: string;
+    pgn?: string;
   };
   Game: {
     gameMode: GameMode;
     difficulty?: DifficultyLevel;
     boardColorTheme?: BoardColorTheme;
+    fen?: string;
+    pgn?: string;
   };
   PrivacyPolicy: undefined;
 };

@@ -133,9 +133,12 @@ const MoveTable = React.memo(({ moves, currentMoveIdx, onMovePress }: MoveTableP
 
 interface BoardInnerProps extends BoardProps {
   boardColorTheme?: BoardColorTheme;
+  initialFen?: string;
+  initialPgn?: string;
+  isAnalysisMode?: boolean;
 }
 
-function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal', boardColorTheme = 'classic' }: BoardInnerProps) {
+function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal', boardColorTheme = 'classic', initialFen, initialPgn, isAnalysisMode = false }: BoardInnerProps) {
   const navigation = useNavigation();
   const clockContext = useClock();
   const [board, setBoard] = useState<string[][]>(() => NativeChessModule.getBoard());
@@ -183,6 +186,42 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       isMountedRef.current = false;
     };
   }, []);
+
+  // Load initial FEN position and/or PGN if provided
+  useEffect(() => {
+    if (initialFen || initialPgn) {
+      // If FEN is provided, load it first
+      if (initialFen) {
+        console.log('Loading FEN:', initialFen);
+        const success = NativeChessModule.loadFEN(initialFen);
+        console.log('FEN load result:', success);
+        if (!success) {
+          Alert.alert('Invalid FEN', 'The provided FEN notation could not be loaded.');
+          return;
+        }
+      } else if (initialPgn) {
+        // If only PGN is provided (no FEN), reset to starting position first
+        console.log('Resetting to starting position for PGN');
+        NativeChessModule.reset();
+      }
+
+      // If PGN moves are provided, load them
+      if (initialPgn) {
+        console.log('Loading PGN moves:', initialPgn);
+        const pgnSuccess = NativeChessModule.loadPGN(initialPgn);
+        console.log('PGN load result:', pgnSuccess);
+        if (!pgnSuccess) {
+          Alert.alert('PGN Error', initialFen 
+            ? 'The FEN loaded successfully, but the PGN moves could not be applied.'
+            : 'The PGN moves could not be loaded. Please check the format.');
+        }
+      }
+
+      refreshBoard();
+      // In analysis mode, start at the beginning so users can navigate forward
+      setCurrentMoveIdx(-1);
+    }
+  }, []); // Only run on mount
 
   useEffect(() => {
     if (gameMode !== 'players') return;
@@ -417,8 +456,13 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
       setTurn(NativeChessModule.getTurn() as PIECE_COLOR);
       setCurrentMoveIdx(index);
       setLastAiMove(null);
+      
+      // Play sound when navigating moves in analysis mode
+      if (isAnalysisMode) {
+        NativeChessModule.playSound('move');
+      }
     }
-  }, [clearSelection]);
+  }, [clearSelection, isAnalysisMode]);
 
   const handleBack = useCallback(() => {
     Alert.alert(
@@ -469,9 +513,11 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
   }, [fenInput, refreshBoard, initialTimeSeconds]);
 
   const isReviewingHistory = moves.length > 0 && currentMoveIdx >= 0 && currentMoveIdx < moves.length - 1;
-  const humanTurn = gameMode === 'computer'
-    ? turn === PIECE_COLOR.white && !isComputerThinking && !isReviewingHistory
-    : !isReviewingHistory;
+  const humanTurn = isAnalysisMode 
+    ? false // Disable moves in analysis mode
+    : gameMode === 'computer'
+      ? turn === PIECE_COLOR.white && !isComputerThinking && !isReviewingHistory
+      : !isReviewingHistory;
 
   return (
     <View style={styles.wrapper}>
@@ -482,9 +528,9 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>
-            {gameMode === 'computer' ? 'vs Computer' : 'vs Player'}
+            {isAnalysisMode ? 'Analysis Mode' : gameMode === 'computer' ? 'vs Computer' : 'vs Player'}
           </Text>
-          {gameMode === 'computer' && (
+          {gameMode === 'computer' && !isAnalysisMode && (
             <Text style={styles.difficultyIndicator}>
               {DIFFICULTY_LEVELS[difficulty].label}
             </Text>
@@ -499,15 +545,27 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
           )}
           {isComputerThinking && <Text style={styles.thinkingLabel}>thinking…</Text>}
         </View>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => { setFenInput(''); setShowFenModal(true); }}>
-          <Text style={styles.resetIconText}>⊞</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.headerBtn, { marginLeft: 6 }]} onPress={resetGame}>
-          <Text style={styles.resetIconText}>↺</Text>
-        </TouchableOpacity>
+        {!isAnalysisMode && (
+          <TouchableOpacity style={styles.headerBtn} onPress={() => { setFenInput(''); setShowFenModal(true); }}>
+            <Text style={styles.resetIconText}>⊞</Text>
+          </TouchableOpacity>
+        )}
+        {!isAnalysisMode && (
+          <TouchableOpacity style={[styles.headerBtn, { marginLeft: 6 }]} onPress={resetGame}>
+            <Text style={styles.resetIconText}>↺</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      {gameMode === 'players' && (
+      {isAnalysisMode && (
+        <View style={styles.analysisModeBanner}>
+          <Text style={styles.analysisModeBannerText}>
+            📋 Analysis Mode - Position loaded from FEN. Moves are disabled.
+          </Text>
+        </View>
+      )}
+
+      {gameMode === 'players' && !isAnalysisMode && (
         <Clock
           label="Black"
           seconds={blackTimeSeconds}
@@ -556,7 +614,66 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
         )}
       </View>
 
-      {gameMode === 'players' && (
+      {isAnalysisMode ? (
+        <View style={styles.navigationControls}>
+          <TouchableOpacity 
+            style={[styles.navButton, currentMoveIdx <= -1 && styles.navButtonDisabled]}
+            onPress={() => {
+              if (currentMoveIdx > -1) {
+                handleMovePress(currentMoveIdx - 1);
+              }
+            }}
+            disabled={currentMoveIdx <= -1}
+          >
+            <Text style={styles.navButtonText}>‹</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.resetToStartButton}
+            onPress={() => {
+              handleMovePress(-1);
+              if (currentMoveIdx !== -1) {
+                NativeChessModule.playSound('move');
+              }
+            }}
+          >
+            <Text style={styles.resetToStartText}>⟲</Text>
+          </TouchableOpacity>
+
+          <View style={styles.moveCounter}>
+            <Text style={styles.moveCounterText}>
+              {currentMoveIdx === -1 ? 'Start Position' : `Move ${currentMoveIdx + 1}${moves.length > 0 ? ` / ${moves.length}` : ''}`}
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.jumpToEndButton}
+            onPress={() => {
+              if (moves.length > 0) {
+                handleMovePress(moves.length - 1);
+                if (currentMoveIdx !== moves.length - 1) {
+                  NativeChessModule.playSound('move');
+                }
+              }
+            }}
+            disabled={moves.length === 0}
+          >
+            <Text style={styles.jumpToEndText}>⟳</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.navButton, currentMoveIdx >= moves.length - 1 && styles.navButtonDisabled]}
+            onPress={() => {
+              if (currentMoveIdx < moves.length - 1) {
+                handleMovePress(currentMoveIdx + 1);
+              }
+            }}
+            disabled={currentMoveIdx >= moves.length - 1}
+          >
+            <Text style={styles.navButtonText}>›</Text>
+          </TouchableOpacity>
+        </View>
+      ) : gameMode === 'players' && (
         <Clock
           label="White"
           seconds={whiteTimeSeconds}
@@ -596,13 +713,21 @@ function BoardInner({ gameMode, initialTimeSeconds = 600, difficulty = 'normal',
 }
 
 export default function Board({ route }: NativeStackScreenProps<RootStackParamList, 'Game'>) {
-  const { gameMode, difficulty, boardColorTheme } = route.params;
+  const { gameMode, difficulty, boardColorTheme, fen, pgn } = route.params;
   const { boardColorTheme: contextTheme } = useBoardColor();
   const theme = boardColorTheme || contextTheme;
+  const isAnalysisMode = !!(fen || pgn); // If FEN or PGN is provided, it's analysis mode
 
   return (
     <SelectionProvider>
-      <BoardInner gameMode={gameMode} difficulty={difficulty} boardColorTheme={theme} />
+      <BoardInner 
+        gameMode={gameMode} 
+        difficulty={difficulty} 
+        boardColorTheme={theme} 
+        initialFen={fen}
+        initialPgn={pgn}
+        isAnalysisMode={isAnalysisMode}
+      />
     </SelectionProvider>
   );
 }
@@ -677,6 +802,92 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.5,
     marginTop: 2,
+    fontWeight: '600',
+  },
+  analysisModeBanner: {
+    backgroundColor: '#2a4a5c',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#3d6478',
+    marginBottom: 4,
+  },
+  analysisModeBannerText: {
+    color: '#b3d9ff',
+    fontSize: 12,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  navigationControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#2b2a27',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#3a3936',
+  },
+  navButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4a7c59',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#5a8c69',
+  },
+  navButtonDisabled: {
+    backgroundColor: '#3a3936',
+    borderColor: '#4a4946',
+    opacity: 0.5,
+  },
+  navButtonText: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: '700',
+    lineHeight: 36,
+  },
+  moveCounter: {
+    flex: 1,
+    marginHorizontal: 16,
+    alignItems: 'center',
+  },
+  moveCounterText: {
+    color: '#f0d9b5',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  resetToStartButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3a3936',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  resetToStartText: {
+    color: '#f0d9b5',
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  jumpToEndButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3a3936',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  jumpToEndText: {
+    color: '#f0d9b5',
+    fontSize: 24,
     fontWeight: '600',
   },
   moveScroll: {

@@ -106,7 +106,7 @@ export default function BoardColorScreen({
   navigation,
   route,
 }: NativeStackScreenProps<RootStackParamList, 'BoardColor'>) {
-  const { gameMode, difficulty } = route.params;
+  const { gameMode, difficulty, fen } = route.params;
   const { boardColorTheme: contextTheme, setBoardColorTheme } = useBoardColor();
   const [selectedTheme, setSelectedTheme] = useState<BoardColorTheme>(contextTheme);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,6 +125,7 @@ export default function BoardColorScreen({
       gameMode,
       difficulty,
       boardColorTheme: selectedTheme,
+      fen,
     });
   };
 

@@ -6,51 +6,29 @@ import {
   StyleSheet,
   Dimensions,
   Image,
-  Modal,
   StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { PIECES, BOARD_SIZE, DifficultyLevel, DIFFICULTY_LEVELS } from '../../utils';
+import { PIECES, BOARD_SIZE, DifficultyLevel } from '../../utils';
 import { RootStackParamList } from '../../navigation/types';
+import {
+  ModeCard,
+  DifficultyModal,
+  FenInputModal,
+  PlayerVsPlayerIcon,
+  PlayerVsComputerIcon,
+  FenIcon,
+} from '../../components';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CONTENT_WIDTH = Math.min(SCREEN_WIDTH - 40, 520);
 
 export type { GameMode } from '../../utils';
 
-const ModeCard = ({
-  title,
-  subtitle,
-  icon,
-  onPress,
-  accent,
-}: {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  onPress: () => void;
-  accent: string;
-}) => (
-  <TouchableOpacity
-    style={[styles.card, { borderColor: accent }]}
-    onPress={onPress}
-    activeOpacity={0.85}
-  >
-    <View style={[styles.cardIcon, { backgroundColor: accent + '22' }]}>
-      {icon}
-    </View>
-    <View style={styles.cardText}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardSubtitle}>{subtitle}</Text>
-    </View>
-    <View style={[styles.cardArrow, { backgroundColor: accent }]}>
-      <Text style={styles.arrowText}>›</Text>
-    </View>
-  </TouchableOpacity>
-);
-
 export default function HomeScreen({ navigation }: NativeStackScreenProps<RootStackParamList, 'Home'>) {
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+  const [showFenModal, setShowFenModal] = useState(false);
+  const [fenInput, setFenInput] = useState('');
 
   const handleComputerPress = () => {
     setShowDifficultyModal(true);
@@ -59,6 +37,22 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
   const handleDifficultySelect = (difficulty: DifficultyLevel) => {
     setShowDifficultyModal(false);
     navigation.navigate('BoardColor', { gameMode: 'computer', difficulty });
+  };
+
+  const handleFenPress = () => {
+    setShowFenModal(true);
+  };
+
+  const handleFenLoad = (fen: string | undefined, pgn?: string) => {
+    setShowFenModal(false);
+    setFenInput('');
+    // Skip BoardColor and go directly to Game in review mode
+    navigation.navigate('Game', { 
+      gameMode: 'players', 
+      fen,
+      pgn,
+      boardColorTheme: 'classic' // Use default theme for FEN review
+    });
   };
 
   return (
@@ -79,13 +73,7 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
           title="Play with Player"
           subtitle="Two players on this device"
           accent="#4a7c59"
-          icon={
-            <View style={styles.iconRow}>
-              <View style={[styles.playerDot, styles.playerDotWhite]} />
-              <Text style={styles.iconVs}>vs</Text>
-              <View style={[styles.playerDot, styles.playerDotBlack]} />
-            </View>
-          }
+          icon={<PlayerVsPlayerIcon />}
           onPress={() => navigation.navigate('BoardColor', { gameMode: 'players' })}
         />
 
@@ -93,14 +81,16 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
           title="Play with Computer"
           subtitle="Challenge the engine"
           accent="#c9a84c"
-          icon={
-            <View style={styles.iconRow}>
-              <View style={[styles.playerDot, styles.playerDotWhite]} />
-              <Text style={styles.iconVs}>vs</Text>
-              <Text style={styles.cpuIcon}>🤖</Text>
-            </View>
-          }
+          icon={<PlayerVsComputerIcon />}
           onPress={handleComputerPress}
+        />
+
+        <ModeCard
+          title="Load FEN Position"
+          subtitle="Start from custom position"
+          accent="#6d5ca6"
+          icon={<FenIcon />}
+          onPress={handleFenPress}
         />
       </View>
       <View style={styles.footer}>
@@ -132,42 +122,19 @@ export default function HomeScreen({ navigation }: NativeStackScreenProps<RootSt
         ))}
       </View>
 
-      <Modal
+      <DifficultyModal
         visible={showDifficultyModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDifficultyModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Select Difficulty</Text>
-            <Text style={styles.modalSubtitle}>Choose how strong you want the computer to be</Text>
-            <View style={styles.difficultyButtonsContainer}>
-              {(['easy', 'normal', 'hard'] as const).map((level) => (
-                <TouchableOpacity
-                  key={level}
-                  style={[styles.difficultyButton, styles[`difficulty_${level}`]]}
-                  onPress={() => handleDifficultySelect(level)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.difficultyButtonText}>
-                    {DIFFICULTY_LEVELS[level].label}
-                  </Text>
-                  <Text style={styles.difficultyButtonDepth}>
-                    (Depth {DIFFICULTY_LEVELS[level].depth})
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowDifficultyModal(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowDifficultyModal(false)}
+        onSelectDifficulty={handleDifficultySelect}
+      />
+
+      <FenInputModal
+        visible={showFenModal}
+        onClose={() => setShowFenModal(false)}
+        onLoadFen={handleFenLoad}
+        fenInput={fenInput}
+        setFenInput={setFenInput}
+      />
     </View>
   );
 }
@@ -222,80 +189,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2b2a27',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-  },
-  cardIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardTitle: {
-    color: '#f0d9b5',
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 3,
-  },
-  cardSubtitle: {
-    color: '#888',
-    fontSize: 13,
-  },
-  cardArrow: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  arrowText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-    lineHeight: 22,
-  },
-
-  iconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  playerDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1.5,
-  },
-  playerDotWhite: {
-    backgroundColor: '#fff',
-    borderColor: '#aaa',
-  },
-  playerDotBlack: {
-    backgroundColor: '#1a1a1a',
-    borderColor: '#555',
-  },
-  iconVs: {
-    color: '#888',
-    fontSize: 11,
-    fontWeight: '600',
-    marginHorizontal: 2,
-  },
-  cpuIcon: {
-    fontSize: 18,
-  },
-
   footer: {
     position: 'absolute',
     bottom: 20,
@@ -319,6 +212,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     opacity: 0.06,
     flexDirection: 'column',
+    pointerEvents: 'none', // Allow touches to pass through
   },
   boardRow: {
     flexDirection: 'row',
@@ -332,81 +226,6 @@ const styles = StyleSheet.create({
   },
   darkCell: {
     backgroundColor: '#b58863',
-  },
-  
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCard: {
-    backgroundColor: '#2b2a27',
-    borderRadius: 16,
-    padding: 24,
-    width: '80%',
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: '#444',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#f0d9b5',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  difficultyButtonsContainer: {
-    marginBottom: 16,
-    gap: 12,
-  },
-  difficultyButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 2,
-  },
-  difficulty_easy: {
-    backgroundColor: '#1a3a2a',
-    borderColor: '#4a7c59',
-  },
-  difficulty_normal: {
-    backgroundColor: '#3a3020',
-    borderColor: '#c9a84c',
-  },
-  difficulty_hard: {
-    backgroundColor: '#3a1a1a',
-    borderColor: '#d64545',
-  },
-  difficultyButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#f0d9b5',
-  },
-  difficultyButtonDepth: {
-    fontSize: 12,
-    color: '#aaa',
-    marginTop: 4,
-  },
-  modalCloseButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    backgroundColor: '#444',
-    alignItems: 'center',
-  },
-  modalCloseButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ccc',
   },
 });
 
